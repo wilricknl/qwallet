@@ -1,0 +1,56 @@
+---
+IndentWidth: 4
+TabWidth: 4
+ColumnLimit: 100
+NamespaceIndentation: None
+PointerAlignment: Left
+Standard: Latest
+PenaltyReturnTypeOnItsOwnLine: 1000000
+AllowShortFunctionsOnASingleLine: All
+AccessModifierOffset: -4
+
+# If `false`, a function call's arguments will either be all on the same line or will have one line
+# each.
+BinPackArguments: false
+
+# If `false`, a function declaration's or function definition's parameters will either all be on
+# the same line or will have one line each.
+BinPackParameters: false
+
+# If the function declaration doesn't fit on a line, allow putting all parameters of a function
+# declaration onto the next line even if `BinPackParameters` is `false`.
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllArgumentsOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: false
+BreakConstructorInitializersBeforeComma: true
+
+# If `true`, horizontally aligns arguments after an open bracket.
+AlignAfterOpenBracket: AlwaysBreak
+AllowShortLambdasOnASingleLine: Inline
+
+BreakInheritanceList: BeforeComma
+
+#BreakBeforeBraces: Allman
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: "true"
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  # Except with empty braces
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# Empty blocks can reside on a single line
+AllowShortBlocksOnASingleLine: Always
+---

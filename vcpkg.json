@@ -1,0 +1,7 @@
+{
+  "name": "qwallet",
+  "version": "0.1.0",
+  "description": "Qubic desktop wallet (Windows/Linux)",
+  "homepage": "https://github.com/wilricknl/qwallet",
+  "dependencies": []
+}

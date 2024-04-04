@@ -1,0 +1,11 @@
+# CLion directories and files
+**/.idea/*
+**/cmake-build-*/*
+**/*.DotSettings.user
+
+# Visual Studio directories and files
+**/.vs/*
+**/out/*
+
+# General directories and files
+build/*
