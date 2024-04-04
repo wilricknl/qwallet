@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(qwallet_VERSION 0.1.0)
+set(qwallet_VERSION 0.1.1)
 
 project(qwallet
         VERSION ${qwallet_VERSION}
@@ -24,12 +24,36 @@ if (MSVC)
 endif()
 
 # -----------------------------------------------------------------------------
+# DEPENDENCIES
+# -----------------------------------------------------------------------------
+
+find_package(cryptopp CONFIG REQUIRED)
+find_package(glad REQUIRED)
+find_package(glfw3 3.3 REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(OpenGL REQUIRED)
+
+include_directories(include)
+
+# -----------------------------------------------------------------------------
 # qwallet
 # -----------------------------------------------------------------------------
 
 add_executable(
 	qwallet 
-	src/main.cpp)
+	src/main.cpp
+	src/wallet.cpp
+	src/gui/qwallet.cpp
+	src/gui/wallet_window.cpp
+	src/gui/window.cpp)
+target_link_libraries(
+	qwallet
+	PRIVATE
+	cryptopp::cryptopp
+	glad::glad
+	glfw
+	imgui::imgui
+	OpenGL::GL)
 
 # -----------------------------------------------------------------------------
 # INSTALLATION
