@@ -1,9 +1,15 @@
 {
   "name": "qwallet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Qubic desktop wallet (Windows/Linux)",
   "homepage": "https://github.com/wilricknl/qwallet",
   "dependencies": [
-    "cryptopp"
+    "cryptopp",
+    "glad",
+    "glfw3",
+    {
+      "name": "imgui",
+      "features": [ "docking-experimental", "freetype", "glfw-binding", "opengl3-binding" ]
+    }
   ]
 }

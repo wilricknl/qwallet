@@ -3,10 +3,12 @@
 #include <cryptopp/integer.h>
 #include <cryptopp/osrng.h>
 
+#include <iostream>
+
 #include "core/four_q.h"
 
 // ------------------------------------------------------------------------------------------------
-std::string generateSeed()
+std::string GenerateSeed()
 {
     std::string seed{};
 
@@ -23,7 +25,32 @@ std::string generateSeed()
 }
 
 // ------------------------------------------------------------------------------------------------
-void printWallet(const std::string& seed)
+Wallet GenerateWallet()
+{
+    auto seed = GenerateSeed();
+
+    uint8_t private_key[32] = {0};
+    uint8_t public_key[32] = {0};
+    uint8_t subseed[32] = {0};
+
+    char private_key_ascii[61] = {0};
+    char public_key_ascii[61] = {0};
+    char public_identity[61] = {0};
+
+    getSubseed((const uint8_t*)seed.data(), subseed);
+
+    getPrivateKey(subseed, private_key);
+    getPublicKey(private_key, public_key);
+
+    getIdentity(private_key, private_key_ascii, true);
+    getIdentity(public_key, public_key_ascii, true);
+    getIdentity(public_key, public_identity, false);
+
+    return Wallet{seed, public_key_ascii, private_key_ascii, public_identity};
+}
+
+// ------------------------------------------------------------------------------------------------
+void PrintWallet(const std::string& seed)
 {
     uint8_t privateKey[32] = {0};
     uint8_t publicKey[32] = {0};
