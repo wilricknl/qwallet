@@ -1,3 +1,3 @@
-#include <iostream>
+#include "wallet.hpp"
 
-int main() { std::cout << "Hello, qwallet!" << std::endl; }
+int main() { printWallet(generateSeed()); }

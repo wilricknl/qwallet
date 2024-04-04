@@ -24,12 +24,25 @@ if (MSVC)
 endif()
 
 # -----------------------------------------------------------------------------
+# DEPENDENCIES
+# -----------------------------------------------------------------------------
+
+find_package(cryptopp CONFIG REQUIRED)
+
+include_directories(include)
+
+# -----------------------------------------------------------------------------
 # qwallet
 # -----------------------------------------------------------------------------
 
 add_executable(
 	qwallet 
-	src/main.cpp)
+	src/main.cpp
+	src/wallet.cpp)
+target_link_libraries(
+	qwallet
+	PRIVATE
+	cryptopp::cryptopp)
 
 # -----------------------------------------------------------------------------
 # INSTALLATION
