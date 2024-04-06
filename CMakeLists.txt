@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(qwallet_VERSION 0.1.1)
+set(qwallet_VERSION 0.1.2)
 
 project(qwallet
         VERSION ${qwallet_VERSION}
@@ -27,11 +27,13 @@ endif()
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
+find_package(Catch2 CONFIG REQUIRED)
 find_package(cryptopp CONFIG REQUIRED)
 find_package(glad REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(tl-expected CONFIG REQUIRED)
 
 include_directories(include)
 
@@ -39,21 +41,45 @@ include_directories(include)
 # qwallet
 # -----------------------------------------------------------------------------
 
-add_executable(
-	qwallet 
-	src/main.cpp
+add_library(
+	qwallet_library
 	src/wallet.cpp
 	src/gui/qwallet.cpp
 	src/gui/wallet_window.cpp
 	src/gui/window.cpp)
 target_link_libraries(
-	qwallet
+	qwallet_library
 	PRIVATE
 	cryptopp::cryptopp
 	glad::glad
 	glfw
 	imgui::imgui
-	OpenGL::GL)
+	OpenGL::GL
+	tl::expected)
+
+add_executable(
+	qwallet 
+	src/main.cpp)
+target_link_libraries(
+	qwallet
+	PRIVATE
+	qwallet_library
+	glad::glad
+	glfw)
+
+# -----------------------------------------------------------------------------
+# TEST
+# -----------------------------------------------------------------------------
+
+add_executable(
+	test_qwallet
+	test/test_wallet.cpp)
+target_link_libraries(
+	test_qwallet
+	PRIVATE
+	qwallet_library
+	Catch2::Catch2
+	Catch2::Catch2WithMain)
 
 # -----------------------------------------------------------------------------
 # INSTALLATION

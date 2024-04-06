@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tl/expected.hpp>
+
 #include <string>
 
 // ------------------------------------------------------------------------------------------------
@@ -16,10 +18,44 @@ struct Wallet
 
 // ------------------------------------------------------------------------------------------------
 /**
+ * Wallet error
+ */
+struct WalletError
+{
+    std::string message;
+};
+
+// ------------------------------------------------------------------------------------------------
+/**
+ * Check seed upon validity
+ * @param out_error_message Return a description of the error
+ * @param  seed The seed to check
+ * @return `true` if valid seed, else `false` 
+ */
+bool IsValidSeed(std::string& out_error_message, const std::string& seed);
+
+// ------------------------------------------------------------------------------------------------
+/**
+ * Check seed upon validity (ignore error message)
+ * @param  seed The seed to check
+ * @return `true` if valid seed, else `false`
+ */
+bool IsValidSeed(const std::string& seed);
+
+// ------------------------------------------------------------------------------------------------
+/**
  * Generate 55-character random seed using Crypto++
  * @return The generated seed
  */
 std::string GenerateSeed();
+
+// ------------------------------------------------------------------------------------------------
+/**
+ * Generate a wallet with a given seed
+ * @param seed 
+ * @return The generated wallet
+ */
+tl::expected<Wallet, WalletError> GenerateWallet(const std::string& seed);
 
 // ------------------------------------------------------------------------------------------------
 /**

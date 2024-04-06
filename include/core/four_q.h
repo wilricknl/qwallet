@@ -1,6 +1,6 @@
 #pragma once
 
-#include <intrin.h>
+#include <immintrin.h>
 
 #include "common_types.h"
 #include "kangaroo_twelve.h"
@@ -1176,6 +1176,46 @@ static void fpneg1271(felm_t a)
     a[1] = 0x7FFFFFFFFFFFFFFF - a[1];
 }
 
+#ifndef _MSC_VER
+static uint64_t _umul128(uint64_t a, uint64_t b, long long unsigned int* hi)
+{
+    union
+    {
+        unsigned __int128 v;
+        uint64_t sv[2];
+    } var;
+    var.v = a;
+    var.v *= b;
+    if (hi)
+        *hi = var.sv[1];
+    return var.sv[0];
+}
+
+static uint64_t __shiftleft128(uint64_t LowPart, uint64_t HighPart, uint8_t Shift)
+{
+    uint64_t ret;
+
+    __asm__("shld {%[Shift],%[LowPart],%[HighPart]|%[HighPart], %[LowPart], %[Shift]}"
+            : [ret] "=r"(ret)
+            : [LowPart] "r"(LowPart), [HighPart] "0"(HighPart), [Shift] "Jc"(Shift)
+            : "cc");
+
+    return ret;
+}
+
+static uint64_t __shiftright128(uint64_t LowPart, uint64_t HighPart, uint8_t Shift)
+{
+    uint64_t ret;
+
+    __asm__("shrd {%[Shift],%[HighPart],%[LowPart]|%[LowPart], %[HighPart], %[Shift]}"
+            : [ret] "=r"(ret)
+            : [LowPart] "0"(LowPart), [HighPart] "r"(HighPart), [Shift] "Jc"(Shift)
+            : "cc");
+
+    return ret;
+}
+#endif
+
 static void fpmul1271(felm_t a, felm_t b, felm_t c)
 { // Field multiplication, c = a*b mod (2^127-1)
     unsigned long long tt1[2], tt2[2], tt3[2];
@@ -1401,8 +1441,8 @@ static void Montgomery_multiply_mod_order(
 
     if (mb[0] == 1 && !mb[1] && !mb[2] && !mb[3])
     {
-        *((__m256i*)&P[0]) = *((__m256i*)ma);
-        *((__m256i*)&P[4]) = _mm256_setzero_si256();
+        memcpy(P, ma, 32);
+        memset(((uint8_t*)P) + 32, 0, 32);
     }
     else
     {
@@ -2881,5 +2921,5 @@ static bool verify(
 
     encode(A, (unsigned char*)A);
 
-    return *((__m256i*)A) == *((__m256i*)signature);
+    return memcmp(A, signature, 32) == 0;
 }

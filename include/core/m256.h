@@ -1,9 +1,10 @@
 #pragma once
 
-#include <intrin.h>
+#include <immintrin.h>
 
 union m256i
 {
+#ifdef _MSC_VER
     __int8              m256i_i8[32];
     __int16             m256i_i16[16];
     __int32             m256i_i32[8];
@@ -12,6 +13,16 @@ union m256i
     unsigned __int16    m256i_u16[16];
     unsigned __int32    m256i_u32[8];
     unsigned __int64    m256i_u64[4];
+#else
+    int8_t              m256i_i8[32];
+    int16_t             m256i_i16[16];
+    int32_t             m256i_i32[8];
+    int64_t             m256i_i64[4];
+    uint8_t             m256i_u8[32];
+    uint16_t            m256i_u16[16];
+    uint32_t            m256i_u32[8];
+    uint64_t            m256i_u64[4];
+#endif
 
     m256i() = default;
 
@@ -114,10 +125,14 @@ union m256i
 
     void setRandomValue()
     {
+#ifdef _MSC_VER
         _rdrand64_step(&m256i_u64[0]);
         _rdrand64_step(&m256i_u64[1]);
         _rdrand64_step(&m256i_u64[2]);
         _rdrand64_step(&m256i_u64[3]);
+#else
+        _rdrand64_step((long long unsigned int*)&m256i_u64);
+#endif
     }
 
     static m256i randomValue()
