@@ -8,6 +8,34 @@
 #include "core/four_q.h"
 
 // ------------------------------------------------------------------------------------------------
+bool IsValidSeed(std::string& out_error_message, const std::string& seed)
+{
+    if (seed.length() != 55)
+    {
+        out_error_message = "The seed length is invalid";
+        return false;
+    }
+
+    for (auto c : seed)
+    {
+        if (c < 'a' || c > 'z')
+        {
+            out_error_message = "Seed contains invalid characters";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// ------------------------------------------------------------------------------------------------
+bool IsValidSeed(const std::string& seed)
+{
+    std::string ignored_error_message;
+    return IsValidSeed(ignored_error_message, seed);
+}
+
+// ------------------------------------------------------------------------------------------------
 std::string GenerateSeed()
 {
     std::string seed{};
@@ -25,9 +53,13 @@ std::string GenerateSeed()
 }
 
 // ------------------------------------------------------------------------------------------------
-Wallet GenerateWallet()
+tl::expected<Wallet, WalletError> GenerateWallet(const std::string& seed)
 {
-    auto seed = GenerateSeed();
+    std::string error_message;
+    if (!IsValidSeed(error_message, seed))
+    {
+        return tl::make_unexpected(WalletError{error_message});
+    }
 
     uint8_t private_key[32] = {0};
     uint8_t public_key[32] = {0};
@@ -48,6 +80,9 @@ Wallet GenerateWallet()
 
     return Wallet{seed, public_key_ascii, private_key_ascii, public_identity};
 }
+
+// ------------------------------------------------------------------------------------------------
+Wallet GenerateWallet() { return GenerateWallet(GenerateSeed()).value(); }
 
 // ------------------------------------------------------------------------------------------------
 void PrintWallet(const std::string& seed)

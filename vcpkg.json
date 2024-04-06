@@ -4,12 +4,14 @@
   "description": "Qubic desktop wallet (Windows/Linux)",
   "homepage": "https://github.com/wilricknl/qwallet",
   "dependencies": [
+    "catch2",
     "cryptopp",
     "glad",
     "glfw3",
     {
       "name": "imgui",
       "features": [ "docking-experimental", "freetype", "glfw-binding", "opengl3-binding" ]
-    }
+    },
+    "tl-expected"
   ]
 }
