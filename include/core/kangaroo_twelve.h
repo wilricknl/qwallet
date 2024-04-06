@@ -1,6 +1,13 @@
 #pragma once
 
-#include <intrin.h>
+#include <immintrin.h>
+
+#ifndef _MSC_VER
+uint64_t _andn_u64(uint64_t a, uint64_t b)
+{
+    return a & ~b;
+}
+#endif
 
 #include "memory.h"
 
