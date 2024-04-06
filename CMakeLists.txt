@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(qwallet_VERSION 0.1.1)
+set(qwallet_VERSION 0.1.2)
 
 project(qwallet
         VERSION ${qwallet_VERSION}
