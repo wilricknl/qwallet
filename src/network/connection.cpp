@@ -11,8 +11,10 @@
 #else
 
 #include <arpa/inet.h>
+#include <cstring>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #endif
 
@@ -113,8 +115,7 @@ tl::expected<ConnectionPtr, ConnectionError> CreateConnection(
 
     if (connect(client_socket, (const sockaddr*)&server_address, sizeof(server_address)) != 0)
     {
-        return tl::make_unexpected(
-            ConnectionError{"Failed to connect with: " + ip_address});
+        return tl::make_unexpected(ConnectionError{"Failed to connect with: " + ip_address});
     }
 
     Connection connection{client_socket};
