@@ -34,6 +34,17 @@ public:
 
 protected:
     /**
+     * Tab for wallet generation controls
+     */
+    void WalletGenerationTab();
+
+    /**
+     * Tab to request account balance
+     */
+    void AccountBalanceTab();
+
+protected:
+    /**
      * Begin render
      * @param flags The window flags
      */
