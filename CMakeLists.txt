@@ -57,6 +57,9 @@ target_link_libraries(
 	imgui::imgui
 	OpenGL::GL
 	tl::expected)
+if(NOT WIN32)
+	target_compile_options(qwallet_library PRIVATE "-march=native")
+endif()
 # todo (wilricknl): figure out how to include tl header files with library
 
 add_executable(

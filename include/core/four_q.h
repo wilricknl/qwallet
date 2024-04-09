@@ -2726,7 +2726,8 @@ static bool getPublicKeyFromIdentity(const unsigned char* identity, unsigned cha
                 (identity[i * 14 + j] - 'A');
         }
     }
-    *((__m256i*)publicKey) = *((__m256i*)publicKeyBuffer);
+
+    memcpy(publicKey, publicKeyBuffer, 32);
 
     return true;
 }

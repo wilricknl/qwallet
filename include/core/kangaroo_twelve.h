@@ -8,7 +8,7 @@
 
 #include <immintrin.h>
 
-uint64_t _andn_u64(uint64_t a, uint64_t b)
+inline uint64_t _andn_u64(uint64_t a, uint64_t b)
 {
     return a & ~b;
 }
