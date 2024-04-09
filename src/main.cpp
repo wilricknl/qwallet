@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "gui/qwallet.hpp"
+#include "network/connection.hpp"
 
 // ------------------------------------------------------------------------------------------------
 int main()
@@ -27,6 +28,13 @@ int main()
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Failed to initialize GLAD" << std::endl;
+        glfwTerminate();
+        return 1;
+    }
+
+    if (!InitializeConnection())
+    {
+        std::cerr << "Failed to initialize networking" << std::endl;
         glfwTerminate();
         return 1;
     }
@@ -60,7 +68,8 @@ int main()
         glfwPollEvents();
     }
 
-    // Destroy node and glfw
+    // Destroy node, glfw and networking
     qwallet.Destroy();
     glfwTerminate();
+    DestroyConnection();
 }

@@ -1,8 +1,13 @@
 #pragma once
 
+#ifdef _MSC_VER
+
+#include <intrin.h>
+
+#else
+
 #include <immintrin.h>
 
-#ifndef _MSC_VER
 uint64_t _andn_u64(uint64_t a, uint64_t b)
 {
     return a & ~b;

@@ -1,9 +1,12 @@
 #include "gui/wallet_window.hpp"
 
-#include "wallet.hpp"
-
-// todo: remove later
+#include <cstring>
 #include <iostream>
+
+#include "core/four_q.h"
+#include "network/connection.hpp"
+#include "network_messages/entity.h"
+#include "wallet.hpp"
 
 // ------------------------------------------------------------------------------------------------
 WalletWindow::WalletWindow(std::string name, bool bShow, bool bCanClose)
@@ -85,6 +88,15 @@ int PublicKeyFilter(ImGuiInputTextCallbackData* data)
     return !(data->EventChar >= 'a' && data->EventChar <= 'z');
 }
 
+int IdentityFilter(ImGuiInputTextCallbackData* data)
+{
+    if (data->EventChar >= 'a' && data->EventChar <= 'z')
+    {
+        data->EventChar -= 'a' - 'A';
+    }
+    return !(data->EventChar >= 'A' && data->EventChar <= 'Z');
+}
+
 int IpFilter(ImGuiInputTextCallbackData* data)
 {
     return !(data->EventChar >= '0' && data->EventChar <= '9' || data->EventChar <= '.');
@@ -97,28 +109,77 @@ void WalletWindow::AccountBalanceTab()
 {
     ImGui::TextUnformatted("Account balance:");
 
-    static char public_key[56] = "";
+    // identity
+    static char identity[61] = "";
     ImGui::InputText(
-        "Public Key",
-        public_key,
-        56,
+        "Identity",
+        identity,
+        61,
         ImGuiInputTextFlags_CallbackCharFilter,
-        PublicKeyFilter);
+        IdentityFilter);
 
+    // ip-address
+    static auto text_color = IM_COL32(255, 0, 0, 255);
     static char ip_address[16] = "";
-    ImGui::InputText(
+
+    ImGui::PushStyleColor(ImGuiCol_Text, text_color);
+    bool bInput = ImGui::InputText(
         "Ip address",
         ip_address,
         16,
         ImGuiInputTextFlags_CallbackCharFilter,
         IpFilter);
+    ImGui::PopStyleColor();
 
+    if (bInput)
+    {
+        if (IsValidIp(ip_address))
+        {
+            text_color = IM_COL32(0, 255, 0, 255); // green
+        }
+        else
+        {
+            text_color = IM_COL32(255, 0, 0, 255); // red
+        }
+    }
+
+    // port
     static char port[6] = "";
     ImGui::InputText("Port", port, 6, ImGuiInputTextFlags_CharsDecimal);
 
     if (ImGui::Button("Get balance"))
     {
-        std::cout << "Implement getting the balance here" << std::endl;
+        // Create connection
+        auto result = CreateConnection(ip_address, atoi(port));
+        if (result.has_value())
+        {
+            auto connection = result.value();
+
+            struct
+            {
+                RequestResponseHeader header;
+                RequestedEntity request;
+            } packet;
+            packet.header.setSize<sizeof(packet)>();
+            packet.header.randomizeDejavu();
+            packet.header.setType(REQUEST_ENTITY);
+
+            unsigned char public_key[32];
+            getPublicKeyFromIdentity((const unsigned char*)identity, public_key);
+            memcpy(&packet.request.publicKey, public_key, 32);
+
+            connection->Send((char*)&packet, sizeof(packet));
+
+            auto response = connection->ReceiveAs<RespondedEntity>(RESPOND_ENTITY);
+
+            std::cout << "Balance: "
+                      << (response.entity.incomingAmount - response.entity.outgoingAmount)
+                      << std::endl;
+        }
+        else
+        {
+            std::cerr << "Failed to create connection: " << result.error().message << std::endl;
+        }
     }
 }
 
