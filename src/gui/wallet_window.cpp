@@ -1,6 +1,7 @@
 #include "gui/wallet_window.hpp"
 
 #include <cstring>
+#include <future>
 #include <iostream>
 
 #include "core/four_q.h"
@@ -107,7 +108,8 @@ int IpFilter(ImGuiInputTextCallbackData* data)
 // ------------------------------------------------------------------------------------------------
 void WalletWindow::AccountBalanceTab()
 {
-    ImGui::TextUnformatted("Account balance:");
+    static long long account_balance = 0;
+    ImGui::Text("Account balance: %ld", account_balance);
 
     // identity
     static char identity[61] = "";
@@ -147,39 +149,54 @@ void WalletWindow::AccountBalanceTab()
     static char port[6] = "";
     ImGui::InputText("Port", port, 6, ImGuiInputTextFlags_CharsDecimal);
 
-    if (ImGui::Button("Get balance"))
+    // async balance request
+    static bool bWaitingForBalance = false;
+    static std::future<long long> balance_future;
+
+    if (bWaitingForBalance)
     {
-        // Create connection
-        auto result = CreateConnection(ip_address, atoi(port));
-        if (result.has_value())
+        if (balance_future._Is_ready())
         {
-            auto connection = result.value();
+            account_balance = balance_future.get();
+            bWaitingForBalance = false;
+        }
+    }
 
-            struct
+    if (ImGui::Button("Get balance") && !bWaitingForBalance)
+    {
+        bWaitingForBalance = true;
+        balance_future = std::async(std::launch::async, [&]() -> long long {
+            // Create connection
+            auto result = CreateConnection(ip_address, atoi(port));
+            if (result.has_value())
             {
-                RequestResponseHeader header;
-                RequestedEntity request;
-            } packet;
-            packet.header.setSize<sizeof(packet)>();
-            packet.header.randomizeDejavu();
-            packet.header.setType(REQUEST_ENTITY);
+                auto connection = result.value();
 
-            unsigned char public_key[32];
-            getPublicKeyFromIdentity((const unsigned char*)identity, public_key);
-            memcpy(&packet.request.publicKey, public_key, 32);
+                // Send request
+                struct
+                {
+                    RequestResponseHeader header;
+                    RequestedEntity request;
+                } packet;
+                packet.header.setSize<sizeof(packet)>();
+                packet.header.randomizeDejavu();
+                packet.header.setType(REQUEST_ENTITY);
 
-            connection->Send((char*)&packet, sizeof(packet));
+                unsigned char public_key[32];
+                getPublicKeyFromIdentity((const unsigned char*)identity, public_key);
+                memcpy(&packet.request.publicKey, public_key, 32);
 
-            auto response = connection->ReceiveAs<RespondedEntity>(RESPOND_ENTITY);
+                connection->Send((char*)&packet, sizeof(packet));
 
-            std::cout << "Balance: "
-                      << (response.entity.incomingAmount - response.entity.outgoingAmount)
-                      << std::endl;
-        }
-        else
-        {
-            std::cerr << "Failed to create connection: " << result.error().message << std::endl;
-        }
+                // Receive response (todo: think about error check)
+                auto response = connection->ReceiveAs<RespondedEntity>(RESPOND_ENTITY);
+
+                return response.entity.incomingAmount - response.entity.outgoingAmount;
+            }
+
+            // todo: perhaps more interesting error reporting ;-)
+            return -1;
+        });
     }
 }
 
