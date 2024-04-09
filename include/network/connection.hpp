@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+#include "network_messages/header.h"
+
 // ------------------------------------------------------------------------------------------------
 /**
  * Connection smart pointer
@@ -61,9 +63,42 @@ public:
      */
     std::vector<char> Receive() const;
 
+    /**
+     * Receive data as a specific type
+     * @param header_type The type (index) of the header that should contain the data
+     * @return The data
+     */
+    template<typename T> T ReceiveAs(unsigned char header_type) const;
+
 private:
     long m_socket;
 };
+
+// ------------------------------------------------------------------------------------------------
+// todo (wilricknl): possibly add a check that `header->size() == sizeof(T)`
+// todo (wilricknl): return an unexpected value, rather than zeroed out struct.
+template <typename T>
+T Connection::ReceiveAs(unsigned char header_type) const
+{
+    std::vector<char> buffer = Receive();
+
+    T result;
+    memset(&result, 0, sizeof(T));
+
+    for (int offset = 0; offset < buffer.size();)
+    {
+        auto* header = reinterpret_cast<RequestResponseHeader*>(buffer.data() + offset);
+
+        if (header->type() == header_type)
+        {
+            result = *(T*)(buffer.data() + offset + sizeof(RequestResponseHeader));
+        }
+
+        offset += header->size();
+    }
+
+    return result;
+}
 
 // ------------------------------------------------------------------------------------------------
 /**

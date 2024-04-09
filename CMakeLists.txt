@@ -74,6 +74,15 @@ target_link_libraries(
 # -----------------------------------------------------------------------------
 
 add_executable(
+	test_qubic_client
+	test/test_qubic_client.cpp)
+target_link_libraries(
+	test_qubic_client
+	PRIVATE
+	qwallet_library
+	tl::expected)
+
+add_executable(
 	test_client
 	test/test_client.cpp)
 target_link_libraries(
