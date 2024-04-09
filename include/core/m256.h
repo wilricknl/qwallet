@@ -125,14 +125,10 @@ union m256i
 
     void setRandomValue()
     {
-#ifdef _MSC_VER
-        _rdrand64_step(&m256i_u64[0]);
-        _rdrand64_step(&m256i_u64[1]);
-        _rdrand64_step(&m256i_u64[2]);
-        _rdrand64_step(&m256i_u64[3]);
-#else
-        _rdrand64_step((long long unsigned int*)&m256i_u64);
-#endif
+        _rdrand64_step((unsigned long long int*)&m256i_u64[0]);
+        _rdrand64_step((unsigned long long int*)&m256i_u64[1]);
+        _rdrand64_step((unsigned long long int*)&m256i_u64[2]);
+        _rdrand64_step((unsigned long long int*)&m256i_u64[3]);
     }
 
     static m256i randomValue()
