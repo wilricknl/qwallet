@@ -109,7 +109,7 @@ int IpFilter(ImGuiInputTextCallbackData* data)
 void WalletWindow::AccountBalanceTab()
 {
     static long long account_balance = 0;
-    ImGui::Text("Account balance: %ld", account_balance);
+    ImGui::Text("Account balance: %lld", account_balance);
 
     // identity
     static char identity[61] = "";
@@ -155,7 +155,7 @@ void WalletWindow::AccountBalanceTab()
 
     if (bWaitingForBalance)
     {
-        if (balance_future._Is_ready())
+        if (balance_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
         {
             account_balance = balance_future.get();
             bWaitingForBalance = false;
