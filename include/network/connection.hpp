@@ -55,6 +55,12 @@ public:
      */
     bool Send(char* buffer, int buffer_length) const;
 
+    /**
+     * Receive data
+     * @return The received data
+     */
+    std::vector<char> Receive() const;
+
 private:
     long m_socket;
 };

@@ -22,11 +22,14 @@ int main(int argc, char* argv[])
 
         auto connection = result.value();
 
-        char message[]{ "QWallet client test" };
+        char message[]{"QWallet client test"};
         if (!connection->Send(message, sizeof(message)))
         {
             std::cout << "Failed to send a message to " << argv[1] << ":" << argv[2] << std::endl;
         }
+
+        std::vector<char> received_data = connection->Receive();
+        std::cout << "Received data: " << std::string{received_data.data()} << std::endl;
     }
 
     DestroyConnection();

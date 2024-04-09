@@ -65,6 +65,25 @@ bool Connection::Send(char* buffer, int buffer_length) const
 }
 
 // ------------------------------------------------------------------------------------------------
+std::vector<char> Connection::Receive() const
+{
+    std::vector<char> buffer;
+    buffer.resize(0);
+
+    char temporary[1024];
+    int bytes_received = recv(m_socket, temporary, sizeof(temporary), 0);
+
+    while (bytes_received > 0)
+    {
+        buffer.resize(buffer.size() + bytes_received);
+        memcpy(buffer.data() + buffer.size() - bytes_received, temporary, bytes_received);
+        bytes_received = recv(m_socket, temporary, sizeof(temporary), 0);
+    }
+
+    return buffer;
+}
+
+// ------------------------------------------------------------------------------------------------
 bool InitializeConnection()
 {
 #ifdef _MSC_VER

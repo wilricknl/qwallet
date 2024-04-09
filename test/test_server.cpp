@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     }
 
     char buffer[1024]{0};
-    if (recv(client_socket, buffer, sizeof(buffer), MSG_WAITALL) != -1)
+    if (recv(client_socket, buffer, sizeof(buffer), 0) != -1)
     {
         std::cout << "Received the following message: " << buffer << std::endl;
     }
@@ -69,6 +69,9 @@ int main(int argc, char* argv[])
     {
         std::cout << "An error occured while receiving data" << std::endl;
     }
+
+    char message[]{"Hello, from the Windows test server!"};
+    send(client_socket, message, sizeof(message), 0);
 
     closesocket(client_socket);
     closesocket(server_socket);
@@ -132,7 +135,7 @@ int main(int argc, char* argv[])
     }
 
     char buffer[1024]{0};
-    if (recv(client_socket, buffer, sizeof(buffer), MSG_WAITALL) != -1)
+    if (recv(client_socket, buffer, sizeof(buffer), 0) != -1)
     {
         std::cout << "Received the following message: " << buffer << std::endl;
     }
@@ -141,8 +144,13 @@ int main(int argc, char* argv[])
         std::cout << "An error occured while receiving data" << std::endl;
     }
 
+    char message[]{"Hello, from the Linux test server!"};
+    send(client_socket, message, sizeof(message), 0);
+
     close(client_socket);
     close(server_socket);
+
+    return 0;
 }
 
 #endif
