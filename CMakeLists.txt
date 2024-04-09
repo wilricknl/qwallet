@@ -81,6 +81,9 @@ target_link_libraries(
 	PRIVATE
 	qwallet_library
 	tl::expected)
+if(NOT WIN32)
+	target_compile_options(test_qubic_client PRIVATE "-march=native")
+endif()
 
 add_executable(
 	test_client

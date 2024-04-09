@@ -2,6 +2,7 @@
 
 #include <tl/expected.hpp>
 
+#include <cstring>
 #include <memory>
 #include <string>
 
