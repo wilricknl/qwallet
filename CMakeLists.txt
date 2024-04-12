@@ -35,6 +35,10 @@ find_package(imgui CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(tl-expected CONFIG REQUIRED)
 
+if (NOT WIN32)
+	find_package(X11 REQUIRED)
+endif ()
+
 include_directories(include)
 
 # -----------------------------------------------------------------------------
@@ -59,6 +63,7 @@ target_link_libraries(
 	OpenGL::GL
 	tl::expected)
 if(NOT WIN32)
+	target_link_libraries(qwallet_library PRIVATE ${X11_LIBRARIES})
 	target_compile_options(qwallet_library PRIVATE "-march=native")
 endif()
 # todo (wilricknl): figure out how to include tl header files with library
