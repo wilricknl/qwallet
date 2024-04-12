@@ -44,6 +44,7 @@ include_directories(include)
 add_library(
 	qwallet_library
 	src/wallet.cpp
+	src/gui/dpi.cpp
 	src/gui/qwallet.cpp
 	src/gui/wallet_window.cpp
 	src/gui/window.cpp
