@@ -1,5 +1,6 @@
 #include "gui/wallet_window.hpp"
 
+#include <atomic>
 #include <cstring>
 #include <future>
 #include <iostream>
@@ -9,6 +10,37 @@
 #include "network_messages/entity.h"
 #include "utility.hpp"
 #include "wallet.hpp"
+
+// ------------------------------------------------------------------------------------------------
+// todo: move to some GUI utility file or whatever
+namespace
+{
+
+int LowercaseFilter(ImGuiInputTextCallbackData* data)
+{
+    if (data->EventChar >= 'A' && data->EventChar <= 'Z')
+    {
+        data->EventChar += 'a' - 'A';
+    }
+    return !(data->EventChar >= 'a' && data->EventChar <= 'z');
+}
+
+int UppercaseFilter(ImGuiInputTextCallbackData* data)
+{
+    if (data->EventChar >= 'a' && data->EventChar <= 'z')
+    {
+        data->EventChar -= 'a' - 'A';
+    }
+    return !(data->EventChar >= 'A' && data->EventChar <= 'Z');
+}
+
+int IpFilter(ImGuiInputTextCallbackData* data)
+{
+    return !(data->EventChar >= '0' && data->EventChar <= '9' || data->EventChar <= '.');
+}
+
+} // namespace
+// ------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------
 WalletWindow::WalletWindow(std::string name, bool bShow, bool bCanClose)
@@ -50,10 +82,57 @@ void WalletWindow::WalletGenerationTab()
 {
     // todo (wilricknl): temporary to get a gui up and running
     static Wallet wallet;
+    static bool bRequirePrefix = false;
+    static bool bWaitingForBruteforce = false;
+    static std::future<Wallet> brute_force_future;
+    static std::atomic<bool> stop_brute_force = false;
 
-    if (ImGui::Button("Generate a new wallet"))
+    ImGui::Checkbox("Require prefix", &bRequirePrefix);
+    ImGui::SameLine();
+    static char prefix[61] = "";
+    ImGui::InputText("Prefix", prefix, 61, ImGuiInputTextFlags_CallbackCharFilter, UppercaseFilter);
+
+    if (bWaitingForBruteforce)
     {
-        wallet = GenerateWallet();
+        if (brute_force_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+        {
+            wallet = brute_force_future.get();
+            bWaitingForBruteforce = false;
+        }
+
+        if (ImGui::Button("Cancel"))
+        {
+            stop_brute_force = true;
+            bWaitingForBruteforce = false;
+        }
+    }
+    else
+    {
+        if (ImGui::Button("Generate a new wallet"))
+        {
+            if (bRequirePrefix)
+            {
+                bWaitingForBruteforce = true;
+
+                brute_force_future = std::async(std::launch::async, [&]() -> Wallet {
+                    Wallet prefixed_wallet = {};
+                    while (!GenerateWalletWithPrefix(prefixed_wallet, prefix))
+                    {
+                        if (stop_brute_force)
+                        {
+                            stop_brute_force = false;
+                            break;
+                        }
+                    }
+
+                    return prefixed_wallet;
+                });
+            }
+            else
+            {
+                wallet = GenerateWallet();
+            }
+        }
     }
 
     ImGui::Text("Seed: %s", wallet.seed.c_str());
@@ -75,36 +154,6 @@ void WalletWindow::WalletGenerationTab()
         ImGui::LogFinish();
     }
 }
-
-// ------------------------------------------------------------------------------------------------
-// todo: move to some GUI utility file or whatever
-namespace
-{
-
-int LowercaseFilter(ImGuiInputTextCallbackData* data)
-{
-    if (data->EventChar >= 'A' && data->EventChar <= 'Z')
-    {
-        data->EventChar += 'a' - 'A';
-    }
-    return !(data->EventChar >= 'a' && data->EventChar <= 'z');
-}
-
-int UppercaseFilter(ImGuiInputTextCallbackData* data)
-{
-    if (data->EventChar >= 'a' && data->EventChar <= 'z')
-    {
-        data->EventChar -= 'a' - 'A';
-    }
-    return !(data->EventChar >= 'A' && data->EventChar <= 'Z');
-}
-
-int IpFilter(ImGuiInputTextCallbackData* data)
-{
-    return !(data->EventChar >= '0' && data->EventChar <= '9' || data->EventChar <= '.');
-}
-
-} // namespace
 
 // ------------------------------------------------------------------------------------------------
 void WalletWindow::AccountBalanceTab()

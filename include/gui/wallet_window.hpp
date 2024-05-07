@@ -15,10 +15,7 @@ public:
      * @param bShow Should show the window
      * @param bCanClose Can close the window
      */
-    explicit WalletWindow(
-        std::string name,
-        bool bShow,
-        bool bCanClose = true);
+    explicit WalletWindow(std::string name, bool bShow, bool bCanClose = true);
 
     /**
      * Next program step
@@ -56,5 +53,4 @@ protected:
     void End() override;
 
 private:
-
 };

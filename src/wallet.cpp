@@ -3,6 +3,7 @@
 #include <cryptopp/integer.h>
 #include <cryptopp/osrng.h>
 
+#include <cstring>
 #include <iostream>
 
 #include "core/four_q.h"
@@ -70,7 +71,6 @@ tl::expected<Wallet, WalletError> GenerateWallet(const std::string& seed)
     char public_identity[61] = {0};
 
     getSubseed((const uint8_t*)seed.data(), subseed);
-
     getPrivateKey(subseed, private_key);
     getPublicKey(private_key, public_key);
 
@@ -83,6 +83,39 @@ tl::expected<Wallet, WalletError> GenerateWallet(const std::string& seed)
 
 // ------------------------------------------------------------------------------------------------
 Wallet GenerateWallet() { return GenerateWallet(GenerateSeed()).value(); }
+
+// ------------------------------------------------------------------------------------------------
+bool GenerateWalletWithPrefix(Wallet& out_wallet, const std::string& prefix)
+{
+    auto seed = GenerateSeed();
+
+    uint8_t private_key[32] = {0};
+    uint8_t public_key[32] = {0};
+    uint8_t subseed[32] = {0};
+
+    getSubseed((const uint8_t*)seed.data(), subseed);
+    getPrivateKey(subseed, private_key);
+    getPublicKey(private_key, public_key);
+
+    char public_identity[61] = {0};
+    getIdentity(public_key, public_identity, false);
+
+    // check prefix
+    if (memcmp(public_identity, prefix.c_str(), prefix.length()) != 0)
+    {
+        return false;
+    }
+
+    // compute other identities
+    char private_key_ascii[61] = {0};
+    char public_key_ascii[61] = {0};
+    getIdentity(private_key, private_key_ascii, true);
+    getIdentity(public_key, public_key_ascii, true);
+
+    out_wallet = Wallet{seed, public_key_ascii, private_key_ascii, public_identity};
+
+    return true;
+}
 
 // ------------------------------------------------------------------------------------------------
 void PrintWallet(const std::string& seed)

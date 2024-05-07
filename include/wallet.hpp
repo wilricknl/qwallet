@@ -66,6 +66,15 @@ Wallet GenerateWallet();
 
 // ------------------------------------------------------------------------------------------------
 /**
+ * Try to generate a wallet with a specific prefix
+ * @param out_wallet Reference to where to save if one is found
+ * @param prefix The prefix to try to find
+ * @return `true` upon success, else `false`
+ */
+bool GenerateWalletWithPrefix(Wallet& out_wallet, const std::string& prefix);
+
+// ------------------------------------------------------------------------------------------------
+/**
  * Print identity, public key and private key belonging to the seed
  * @param seed The seed of the wallet
  */
