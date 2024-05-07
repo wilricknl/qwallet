@@ -4,6 +4,8 @@
 #include <cstring>
 #include <future>
 #include <iostream>
+#include <mutex>
+#include <thread>
 
 #include "core/four_q.h"
 #include "network/connection.hpp"
@@ -78,6 +80,38 @@ void WalletWindow::Render()
 }
 
 // ------------------------------------------------------------------------------------------------
+/**
+ * Thread to brute force a specific prefix
+ * @param stop_brute_force Atomic boolean to cancel the brute force operation
+ * @param prefix The prefix to look for
+ * @param out_result The variable to write the result too
+ * @param result_mutex Mutex to safely write the result
+ */
+void brute_force_wallet_thread(
+    std::atomic<bool>& stop_brute_force,
+    std::string prefix,
+    Wallet& out_result,
+    std::mutex& result_mutex)
+{
+    Wallet prefixed_wallet = {};
+    while (!GenerateWalletWithPrefix(prefixed_wallet, prefix))
+    {
+        if (stop_brute_force)
+        {
+            return;
+        }
+    }
+
+    // make other threads stop
+    stop_brute_force = true;
+
+    {
+        std::lock_guard<std::mutex> guard(result_mutex);
+        out_result = prefixed_wallet;
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
 void WalletWindow::WalletGenerationTab()
 {
     // todo (wilricknl): temporary to get a gui up and running
@@ -114,18 +148,42 @@ void WalletWindow::WalletGenerationTab()
             {
                 bWaitingForBruteforce = true;
 
+                // note: probably something smarter is possible, too busy and dumb to think about it now
                 brute_force_future = std::async(std::launch::async, [&]() -> Wallet {
-                    Wallet prefixed_wallet = {};
-                    while (!GenerateWalletWithPrefix(prefixed_wallet, prefix))
+                    auto max_threads = std::thread::hardware_concurrency();
+                    if (max_threads > 1)
                     {
-                        if (stop_brute_force)
-                        {
-                            stop_brute_force = false;
-                            break;
-                        }
+                        // leave 1 for main program/os
+                        max_threads--;
                     }
 
-                    return prefixed_wallet;
+                    Wallet result;
+                    std::mutex result_mutex;
+
+                    // start threads for bruteforce
+                    std::vector<std::thread> threads;
+                    for (unsigned int thread_id = 0; thread_id < max_threads; ++thread_id)
+                    {
+                        auto thread = std::thread(
+                            brute_force_wallet_thread,
+                            std::ref(stop_brute_force),
+                            prefix,
+                            std::ref(result),
+                            std::ref(result_mutex));
+                        threads.push_back(std::move(thread));
+                    }
+
+                    // join threads
+                    for (auto& thread : threads)
+                    {
+                        thread.join();
+                    }
+
+                    // enforce reset stop brute force
+                    stop_brute_force = false;
+
+                    // return found result
+                    return result;
                 });
             }
             else
