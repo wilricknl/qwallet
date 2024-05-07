@@ -7,6 +7,7 @@
 #include "core/four_q.h"
 #include "network/connection.hpp"
 #include "network_messages/entity.h"
+#include "utility.hpp"
 #include "wallet.hpp"
 
 // ------------------------------------------------------------------------------------------------
@@ -80,7 +81,7 @@ void WalletWindow::WalletGenerationTab()
 namespace
 {
 
-int PublicKeyFilter(ImGuiInputTextCallbackData* data)
+int LowercaseFilter(ImGuiInputTextCallbackData* data)
 {
     if (data->EventChar >= 'A' && data->EventChar <= 'Z')
     {
@@ -89,7 +90,7 @@ int PublicKeyFilter(ImGuiInputTextCallbackData* data)
     return !(data->EventChar >= 'a' && data->EventChar <= 'z');
 }
 
-int IdentityFilter(ImGuiInputTextCallbackData* data)
+int UppercaseFilter(ImGuiInputTextCallbackData* data)
 {
     if (data->EventChar >= 'a' && data->EventChar <= 'z')
     {
@@ -109,7 +110,7 @@ int IpFilter(ImGuiInputTextCallbackData* data)
 void WalletWindow::AccountBalanceTab()
 {
     static long long account_balance = 0;
-    ImGui::Text("Account balance: %lld", account_balance);
+    ImGui::Text("Account balance: %s", to_comma_separated_string(account_balance).c_str());
 
     // identity
     static char identity[61] = "";
@@ -118,7 +119,7 @@ void WalletWindow::AccountBalanceTab()
         identity,
         61,
         ImGuiInputTextFlags_CallbackCharFilter,
-        IdentityFilter);
+        UppercaseFilter);
 
     // ip-address
     static auto text_color = IM_COL32(255, 0, 0, 255);

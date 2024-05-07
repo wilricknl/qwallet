@@ -47,6 +47,7 @@ include_directories(include)
 
 add_library(
 	qwallet_library
+	src/utility.cpp
 	src/wallet.cpp
 	src/gui/dpi.cpp
 	src/gui/qwallet.cpp
@@ -113,6 +114,7 @@ target_link_libraries(
 
 add_executable(
 	test_qwallet
+	test/test_utility.cpp
 	test/test_wallet.cpp)
 target_link_libraries(
 	test_qwallet
