@@ -1,6 +1,12 @@
 #pragma once
 
-#include "window.hpp"
+#include <atomic>
+#include <future>
+#include <mutex>
+
+#include "gui/window.hpp"
+#include "wallet.hpp"
+
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -16,6 +22,11 @@ public:
      * @param bCanClose Can close the window
      */
     explicit WalletWindow(std::string name, bool bShow, bool bCanClose = true);
+
+    /**
+     * Destructor
+     */
+    ~WalletWindow();
 
     /**
      * Next program step
@@ -53,4 +64,12 @@ protected:
     void End() override;
 
 private:
+    /// Is brute force running
+    bool m_bWaitingForBruteForce = false;
+
+    /// Future to receive brute force result
+    std::future<Wallet> m_bruteForceFuture;
+
+    /// Tell brute force threads to stop
+    std::atomic<bool> m_stopBruteForce = false;
 };

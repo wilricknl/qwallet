@@ -1,17 +1,14 @@
 #include "gui/wallet_window.hpp"
 
-#include <atomic>
 #include <cstring>
 #include <future>
 #include <iostream>
-#include <mutex>
 #include <thread>
 
 #include "core/four_q.h"
 #include "network/connection.hpp"
 #include "network_messages/entity.h"
 #include "utility.hpp"
-#include "wallet.hpp"
 
 // ------------------------------------------------------------------------------------------------
 // todo: move to some GUI utility file or whatever
@@ -48,6 +45,18 @@ int IpFilter(ImGuiInputTextCallbackData* data)
 WalletWindow::WalletWindow(std::string name, bool bShow, bool bCanClose)
     : Window(std::move(name), bShow, bCanClose)
 {}
+
+// ------------------------------------------------------------------------------------------------
+WalletWindow::~WalletWindow()
+{
+    if (m_bWaitingForBruteForce)
+    {
+        // wait maximally 5 seconds for the brute force threads to clean up, if it is still running
+        // while exiting
+        m_stopBruteForce = true;
+        m_bruteForceFuture.wait_for(std::chrono::seconds(5));
+    }
+}
 
 // ------------------------------------------------------------------------------------------------
 void WalletWindow::Update(GLFWwindow* glfwWindow, double deltaTime) {}
@@ -117,27 +126,24 @@ void WalletWindow::WalletGenerationTab()
     // todo (wilricknl): temporary to get a gui up and running
     static Wallet wallet;
     static bool bRequirePrefix = false;
-    static bool bWaitingForBruteforce = false;
-    static std::future<Wallet> brute_force_future;
-    static std::atomic<bool> stop_brute_force = false;
 
     ImGui::Checkbox("Require prefix", &bRequirePrefix);
     ImGui::SameLine();
     static char prefix[61] = "";
     ImGui::InputText("Prefix", prefix, 61, ImGuiInputTextFlags_CallbackCharFilter, UppercaseFilter);
 
-    if (bWaitingForBruteforce)
+    if (m_bWaitingForBruteForce)
     {
-        if (brute_force_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+        if (m_bruteForceFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
         {
-            wallet = brute_force_future.get();
-            bWaitingForBruteforce = false;
+            wallet = m_bruteForceFuture.get();
+            m_bWaitingForBruteForce = false;
         }
 
         if (ImGui::Button("Cancel"))
         {
-            stop_brute_force = true;
-            bWaitingForBruteforce = false;
+            m_stopBruteForce = true;
+            m_bWaitingForBruteForce = false;
         }
     }
     else
@@ -146,10 +152,11 @@ void WalletWindow::WalletGenerationTab()
         {
             if (bRequirePrefix)
             {
-                bWaitingForBruteforce = true;
+                m_bWaitingForBruteForce = true;
 
-                // note: probably something smarter is possible, too busy and dumb to think about it now
-                brute_force_future = std::async(std::launch::async, [&]() -> Wallet {
+                // note: probably something smarter is possible, too busy and dumb to think about it
+                // now
+                m_bruteForceFuture = std::async(std::launch::async, [&]() -> Wallet {
                     auto max_threads = std::thread::hardware_concurrency();
                     if (max_threads > 1)
                     {
@@ -166,7 +173,7 @@ void WalletWindow::WalletGenerationTab()
                     {
                         auto thread = std::thread(
                             brute_force_wallet_thread,
-                            std::ref(stop_brute_force),
+                            std::ref(m_stopBruteForce),
                             prefix,
                             std::ref(result),
                             std::ref(result_mutex));
@@ -180,7 +187,7 @@ void WalletWindow::WalletGenerationTab()
                     }
 
                     // enforce reset stop brute force
-                    stop_brute_force = false;
+                    m_stopBruteForce = false;
 
                     // return found result
                     return result;
