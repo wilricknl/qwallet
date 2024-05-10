@@ -126,11 +126,34 @@ void WalletWindow::WalletGenerationTab()
     // todo (wilricknl): temporary to get a gui up and running
     static Wallet wallet;
     static bool bRequirePrefix = false;
+    static bool bUseSeed = false;
 
-    ImGui::Checkbox("Require prefix", &bRequirePrefix);
+    if (ImGui::Checkbox("Require prefix", &bRequirePrefix))
+    {
+        if (bUseSeed)
+        {
+            bUseSeed ^= bRequirePrefix;
+        }
+    }
     ImGui::SameLine();
     static char prefix[61] = "";
     ImGui::InputText("Prefix", prefix, 61, ImGuiInputTextFlags_CallbackCharFilter, UppercaseFilter);
+
+    if (ImGui::Checkbox("Use seed", &bUseSeed))
+    {
+        if (bRequirePrefix)
+        {
+            bRequirePrefix ^= bUseSeed;
+        }
+    }
+    ImGui::SameLine();
+    static char seed[56] = "";
+    ImGui::InputText(
+        "Seed",
+        seed,
+        sizeof(seed),
+        ImGuiInputTextFlags_CallbackCharFilter,
+        LowercaseFilter);
 
     if (m_bWaitingForBruteForce)
     {
@@ -148,9 +171,21 @@ void WalletWindow::WalletGenerationTab()
     }
     else
     {
-        if (ImGui::Button("Generate a new wallet"))
+        if (ImGui::Button("Generate wallet"))
         {
-            if (bRequirePrefix)
+            if (bUseSeed)
+            {
+                std::string seed_str{seed};
+                if (seed_str.size() == 55)
+                {
+                    auto generated_wallet = GenerateWallet(seed);
+                    if (generated_wallet.has_value())
+                    {
+                        wallet = generated_wallet.value();
+                    }
+                }
+            }
+            else if (bRequirePrefix)
             {
                 m_bWaitingForBruteForce = true;
 
