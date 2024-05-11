@@ -48,14 +48,22 @@ int main(int argc, char* argv[])
         }
 
         // Receive response
-        auto system_info = connection->ReceiveAs<RespondSystemInfo>(RESPOND_SYSTEM_INFO);
-        printf("Version:              %u\n", system_info.version);
-        printf("Epoch:                %u\n", system_info.epoch);
-        printf("Tick:                 %u\n", system_info.tick);
-        printf("InitialTick:          %u\n", system_info.initialTick);
-        printf("LatestCreatedTick:    %u\n", system_info.latestCreatedTick);
-        printf("NumberOfEntities:     %u\n", system_info.numberOfEntities);
-        printf("NumberOfTransactions: %u\n", system_info.numberOfTransactions);
+        auto response = connection->ReceiveAs<RespondSystemInfo>(RESPOND_SYSTEM_INFO);
+        if (response)
+        {
+            auto system_info = response.value();
+            printf("Version:              %u\n", system_info.version);
+            printf("Epoch:                %u\n", system_info.epoch);
+            printf("Tick:                 %u\n", system_info.tick);
+            printf("InitialTick:          %u\n", system_info.initialTick);
+            printf("LatestCreatedTick:    %u\n", system_info.latestCreatedTick);
+            printf("NumberOfEntities:     %u\n", system_info.numberOfEntities);
+            printf("NumberOfTransactions: %u\n", system_info.numberOfTransactions);
+        }
+        else
+        {
+            std::cout << "error: " << response.error().message << std::endl;
+        }
     }
 
     // Clean up socket libraries

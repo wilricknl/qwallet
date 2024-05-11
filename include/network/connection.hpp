@@ -98,7 +98,8 @@ tl::expected<T, ConnectionError> Connection::ReceiveAs(unsigned char header_type
                 return result;
             }
             return tl::make_unexpected(ConnectionError{
-                "Response had the size: " + std::to_string(header->getPayloadSize()) +
+                "Response of type " + std::to_string(header->type()) +
+                " had the size: " + std::to_string(header->getPayloadSize()) +
                 " instead of expected size: " + std::to_string(sizeof(T))});
         }
 
