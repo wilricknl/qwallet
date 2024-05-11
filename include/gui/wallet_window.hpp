@@ -51,6 +51,11 @@ protected:
      */
     void AccountBalanceTab();
 
+    /**
+     * Tab to make transactions
+     */
+    void TransactionTab();
+
 protected:
     /**
      * Begin render

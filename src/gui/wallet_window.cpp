@@ -38,6 +38,18 @@ int IpFilter(ImGuiInputTextCallbackData* data)
     return !(data->EventChar >= '0' && data->EventChar <= '9' || data->EventChar <= '.');
 }
 
+void HelpMarker(const std::string& description)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(description.c_str());
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
 } // namespace
 // ------------------------------------------------------------------------------------------------
 
@@ -80,6 +92,11 @@ void WalletWindow::Render()
         if (ImGui::BeginTabItem("Generation"))
         {
             WalletGenerationTab();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Transaction"))
+        {
+            TransactionTab();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
@@ -128,11 +145,17 @@ void WalletWindow::WalletGenerationTab()
     static bool bRequirePrefix = false;
     static bool bUseSeed = false;
 
+    ImGui::SeparatorText("Generate wallet");
+
     if (ImGui::Checkbox("Require prefix", &bRequirePrefix))
     {
         // toggle off, if bRequirePrefix is turned on
         bUseSeed &= !bRequirePrefix;
     }
+
+    ImGui::SameLine();
+    HelpMarker("A prefix of more than 4 letters may take hours to compute");
+
     ImGui::SameLine();
     static char prefix[61] = "";
     ImGui::InputText("Prefix", prefix, 61, ImGuiInputTextFlags_CallbackCharFilter, UppercaseFilter);
@@ -167,7 +190,7 @@ void WalletWindow::WalletGenerationTab()
     }
     else
     {
-        if (ImGui::Button("Generate wallet"))
+        if (ImGui::Button("Generate"))
         {
             if (bUseSeed)
             {
@@ -231,6 +254,8 @@ void WalletWindow::WalletGenerationTab()
         }
     }
 
+    ImGui::SeparatorText("Wallet");
+
     ImGui::Text("Seed: %s", wallet.seed.c_str());
     ImGui::Text("Private key: %s", wallet.private_key.c_str());
     ImGui::Text("Public key: %s", wallet.public_key.c_str());
@@ -292,7 +317,7 @@ void WalletWindow::AccountBalanceTab()
     }
 
     // port
-    static char port[6] = "";
+    static char port[6] = "21841";
     ImGui::InputText("Port", port, 6, ImGuiInputTextFlags_CharsDecimal);
 
     // async balance request
@@ -346,6 +371,148 @@ void WalletWindow::AccountBalanceTab()
             // todo: perhaps more interesting error reporting ;-)
             return -1;
         });
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+void WalletWindow::TransactionTab()
+{
+    ImGui::SeparatorText("Make transaction");
+
+    static char seed[56] = "";
+    ImGui::InputText("Seed", seed, 56, ImGuiInputTextFlags_CallbackCharFilter, LowercaseFilter);
+
+    // recipient
+    static char recipientIdentity[61] = "";
+    ImGui::InputText(
+        "Recipient",
+        recipientIdentity,
+        61,
+        ImGuiInputTextFlags_CallbackCharFilter,
+        UppercaseFilter);
+
+    // amount
+    static unsigned long long amount = 0;
+    ImGui::InputScalar(
+        "Amount",
+        ImGuiDataType_U64,
+        &amount,
+        nullptr,
+        nullptr,
+        nullptr,
+        ImGuiInputTextFlags_CharsDecimal);
+
+    // tick offset
+    static unsigned long long offset = 20;
+    ImGui::InputScalar(
+        "Tick offset",
+        ImGuiDataType_U64,
+        &offset,
+        nullptr,
+        nullptr,
+        nullptr,
+        ImGuiInputTextFlags_CharsDecimal);
+
+    ImGui::SameLine();
+    HelpMarker("Number of ticks in the future at which the transaction must be executed");
+
+    // ip-address
+    static auto text_color = IM_COL32(255, 0, 0, 255);
+    static char ip_address[16] = "";
+
+    ImGui::PushStyleColor(ImGuiCol_Text, text_color);
+    bool bInput = ImGui::InputText(
+        "Ip address",
+        ip_address,
+        16,
+        ImGuiInputTextFlags_CallbackCharFilter,
+        IpFilter);
+    ImGui::PopStyleColor();
+
+    if (bInput)
+    {
+        if (IsValidIp(ip_address))
+        {
+            text_color = IM_COL32(0, 255, 0, 255); // green
+        }
+        else
+        {
+            text_color = IM_COL32(255, 0, 0, 255); // red
+        }
+    }
+
+    // port
+    static char port[6] = "21841";
+    ImGui::InputText("Port", port, 6, ImGuiInputTextFlags_CharsDecimal);
+
+    if (ImGui::Button("Send"))
+    {
+        ImGui::OpenPopup("Confirm transaction");
+    }
+
+    // transaction confirmation
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    if (ImGui::BeginPopupModal("Confirm transaction"))
+    {
+        ImGui::TextWrapped(R"(Amount: "%s")", to_comma_separated_string(amount).c_str());
+        ImGui::TextWrapped(
+            R"(Recipient: "%.*s...%.*s")",
+            5,
+            recipientIdentity,
+            5,
+            recipientIdentity + 55);
+
+        if (ImGui::Button("Send", ImVec2(120, 0)))
+        {
+            // todo: actual implementattion
+            std::cout << "todo: Sending transaction to node" << std::endl;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            // todo: remove print
+            std::cout << "Cancelling transaction" << std::endl;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::SeparatorText("Transaction history");
+
+    // Transaction overview table
+    if (ImGui::BeginTable("Transactions", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+    {
+        ImGui::TableSetupColumn("Sender");
+        ImGui::TableSetupColumn("Recipient");
+        ImGui::TableSetupColumn("Amount");
+        ImGui::TableSetupColumn("Tick");
+        ImGui::TableSetupColumn("Hash");
+        ImGui::TableSetupColumn("Status");
+        ImGui::TableHeadersRow();
+
+        // todo: row logic
+        for (int i = 0; i < 4; ++i)
+        {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("AAA...BBB");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("CCC...DDD");
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("12345");
+            ImGui::TableSetColumnIndex(3);
+            ImGui::Text("1245002");
+            ImGui::TableSetColumnIndex(4);
+            ImGui::Text("0xABCDABCDABCDABCD");
+            ImGui::TableSetColumnIndex(5);
+            ImGui::Text("Confirming");
+        }
+
+        ImGui::EndTable();
     }
 }
 
