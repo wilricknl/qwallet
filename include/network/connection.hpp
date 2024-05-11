@@ -67,38 +67,46 @@ public:
     /**
      * Receive data as a specific type
      * @param header_type The type (index) of the header that should contain the data
-     * @return The data
+     * @return The data or encountered error
      */
-    template<typename T> T ReceiveAs(unsigned char header_type) const;
+    template <typename T>
+    tl::expected<T, ConnectionError> ReceiveAs(unsigned char header_type) const;
 
 private:
     long m_socket;
 };
 
 // ------------------------------------------------------------------------------------------------
-// todo (wilricknl): possibly add a check that `header->size() == sizeof(T)`
-// todo (wilricknl): return an unexpected value, rather than zeroed out struct.
 template <typename T>
-T Connection::ReceiveAs(unsigned char header_type) const
+tl::expected<T, ConnectionError> Connection::ReceiveAs(unsigned char header_type) const
 {
     std::vector<char> buffer = Receive();
-
-    T result;
-    memset(&result, 0, sizeof(T));
+    if (buffer.empty())
+    {
+        return tl::make_unexpected(ConnectionError{"Connection failed to get a response"});
+    }
 
     for (int offset = 0; offset < buffer.size();)
     {
         auto* header = reinterpret_cast<RequestResponseHeader*>(buffer.data() + offset);
-
         if (header->type() == header_type)
         {
-            result = *(T*)(buffer.data() + offset + sizeof(RequestResponseHeader));
+            // todo: there's also a function to check min/max, which packets have dynamic size?
+            if (header->checkPayloadSize(sizeof(T)))
+            {
+                T result = *header->getPayload<T>();
+                return result;
+            }
+            return tl::make_unexpected(ConnectionError{
+                "Response had the size: " + std::to_string(header->getPayloadSize()) +
+                " instead of expected size: " + std::to_string(sizeof(T))});
         }
 
         offset += header->size();
     }
 
-    return result;
+    return tl::make_unexpected(ConnectionError{
+        "Response did not contain header type: " + std::to_string((int)header_type)});
 }
 
 // ------------------------------------------------------------------------------------------------

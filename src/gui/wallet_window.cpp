@@ -130,10 +130,8 @@ void WalletWindow::WalletGenerationTab()
 
     if (ImGui::Checkbox("Require prefix", &bRequirePrefix))
     {
-        if (bUseSeed)
-        {
-            bUseSeed ^= bRequirePrefix;
-        }
+        // toggle off, if bRequirePrefix is turned on
+        bUseSeed &= !bRequirePrefix;
     }
     ImGui::SameLine();
     static char prefix[61] = "";
@@ -141,10 +139,8 @@ void WalletWindow::WalletGenerationTab()
 
     if (ImGui::Checkbox("Use seed", &bUseSeed))
     {
-        if (bRequirePrefix)
-        {
-            bRequirePrefix ^= bUseSeed;
-        }
+        // toggle off, if bUseSeed is turned on
+        bRequirePrefix &= !bUseSeed;
     }
     ImGui::SameLine();
     static char seed[56] = "";
@@ -338,10 +334,13 @@ void WalletWindow::AccountBalanceTab()
 
                 connection->Send((char*)&packet, sizeof(packet));
 
-                // Receive response (todo: think about error check)
+                // Receive response (todo: do something with connection error (maybe eat it))
                 auto response = connection->ReceiveAs<RespondedEntity>(RESPOND_ENTITY);
-
-                return response.entity.incomingAmount - response.entity.outgoingAmount;
+                if (response.has_value())
+                {
+                    return response->entity.incomingAmount - response->entity.outgoingAmount;
+                }
+                std::cout << "Balance request failed: " << response.error().message << std::endl;
             }
 
             // todo: perhaps more interesting error reporting ;-)
