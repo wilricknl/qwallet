@@ -176,15 +176,14 @@ void WalletWindow::WalletGenerationTab()
 
     if (m_bWaitingForBruteForce)
     {
-        if (m_bruteForceFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
-        {
-            wallet = m_bruteForceFuture.get();
-            m_bWaitingForBruteForce = false;
-        }
-
         if (ImGui::Button("Cancel"))
         {
             m_stopBruteForce = true;
+            m_bWaitingForBruteForce = false;
+        }
+        else if (m_bruteForceFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+        {
+            wallet = m_bruteForceFuture.get();
             m_bWaitingForBruteForce = false;
         }
     }
@@ -265,6 +264,20 @@ void WalletWindow::WalletGenerationTab()
     {
         ImGui::LogToClipboard();
         ImGui::LogText("%s", wallet.seed.c_str());
+        ImGui::LogFinish();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Copy private key"))
+    {
+        ImGui::LogToClipboard();
+        ImGui::LogText("%s", wallet.private_key.c_str());
+        ImGui::LogFinish();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Copy public key"))
+    {
+        ImGui::LogToClipboard();
+        ImGui::LogText("%s", wallet.public_key.c_str());
         ImGui::LogFinish();
     }
     ImGui::SameLine();
