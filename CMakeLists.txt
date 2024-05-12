@@ -54,7 +54,8 @@ add_library(
 	src/gui/wallet_window.cpp
 	src/gui/window.cpp
 	src/network/connection.cpp
-	src/network/tick.cpp)
+	src/network/tick.cpp
+	src/network/transactions.cpp)
 target_link_libraries(
 	qwallet_library
 	PRIVATE
