@@ -88,3 +88,30 @@ tl::expected<unsigned, ConnectionError> getInitialTick(const ConnectionPtr& conn
     }
     return tl::make_unexpected(info.error());
 }
+
+// ------------------------------------------------------------------------------------------------
+tl::expected<BroadcastFutureTickData, ConnectionError> getTickData(
+    const ConnectionPtr& connection,
+    unsigned tick)
+{
+    // Construct request packet
+    struct
+    {
+        RequestResponseHeader header;
+        RequestTickData payload;
+    } packet;
+
+    // Init header
+    packet.header.setSize<sizeof(packet)>();
+    packet.header.randomizeDejavu();
+    packet.header.setType(packet.payload.type);
+
+    // Init request tick data
+    packet.payload.requestedTickData.tick = tick;
+
+    // Send request
+    connection->Send((char*)&packet, sizeof(packet));
+
+    // Receive response
+    return connection->ReceiveAs<BroadcastFutureTickData>(BroadcastFutureTickData::type);
+}

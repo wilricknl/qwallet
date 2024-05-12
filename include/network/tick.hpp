@@ -62,3 +62,14 @@ tl::expected<unsigned short, ConnectionError> getNumberOfMisalignedVotes(
  * @return The initial tick of the epoch upon success, else a connection error
  */
 tl::expected<unsigned int, ConnectionError> getInitialTick(const ConnectionPtr& connection);
+
+// ------------------------------------------------------------------------------------------------
+/**
+ * Get tick data
+ * @param connection The node to query
+ * @param tick The tick to request
+ * @return The tick data or a connection error
+ */
+tl::expected<BroadcastFutureTickData, ConnectionError> getTickData(
+    const ConnectionPtr& connection,
+    unsigned int tick);
