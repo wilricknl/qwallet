@@ -73,3 +73,12 @@ tl::expected<unsigned int, ConnectionError> getInitialTick(const ConnectionPtr& 
 tl::expected<BroadcastFutureTickData, ConnectionError> getTickData(
     const ConnectionPtr& connection,
     unsigned int tick);
+
+// ------------------------------------------------------------------------------------------------
+/**
+ * Check if a tick contains a specific transaction
+ * @param data The tick data to check
+ * @param hash The hash of the transaction
+ * @return `true` if the tick contains the transaction, else `false`
+ */
+bool containsTransaction(const TickData& data, const std::string& hash);

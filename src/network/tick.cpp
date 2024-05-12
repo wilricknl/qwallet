@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "core/four_q.h"
+
 // ------------------------------------------------------------------------------------------------
 tl::expected<CurrentTickInfo, ConnectionError> getCurrentTickInfo(const ConnectionPtr& connection)
 {
@@ -114,4 +116,33 @@ tl::expected<BroadcastFutureTickData, ConnectionError> getTickData(
 
     // Receive response
     return connection->ReceiveAs<BroadcastFutureTickData>(BroadcastFutureTickData::type);
+}
+
+// ------------------------------------------------------------------------------------------------
+bool containsTransaction(const TickData& data, const std::string& hash)
+{
+    unsigned char zeroed[32]{0};
+    unsigned char digest[32]{0};
+
+    if (!getDigestFromTransactionHash((unsigned char*)hash.data(), digest))
+    {
+        return false;
+    }
+
+    for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; ++i)
+    {
+        // reached end of buffer upon first zeroed digest
+        if (memcmp(data.transactionDigests + i, zeroed, 32) == 0)
+        {
+            break;
+        }
+
+        // compare tick digests with the digest of the transaction we try to find
+        if (memcmp(data.transactionDigests + i, digest, 32) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

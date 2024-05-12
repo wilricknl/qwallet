@@ -2732,6 +2732,30 @@ static bool getPublicKeyFromIdentity(const unsigned char* identity, unsigned cha
     return true;
 }
 
+// Essentially getPublicKeyFromIdentity, except that the hash is lowercase instead of uppercase...
+static bool getDigestFromTransactionHash(const unsigned char* hash, unsigned char* digest)
+{
+    unsigned char publicKeyBuffer[32];
+    for (int i = 0; i < 4; i++)
+    {
+        *((unsigned long long*)&publicKeyBuffer[i << 3]) = 0;
+        for (int j = 14; j-- > 0;)
+        {
+            if (hash[i * 14 + j] < 'a' || hash[i * 14 + j] > 'z')
+            {
+                return false;
+            }
+
+            *((unsigned long long*)&publicKeyBuffer[i << 3]) =
+                *((unsigned long long*)&publicKeyBuffer[i << 3]) * 26 + (hash[i * 14 + j] - 'a');
+        }
+    }
+
+    memcpy(digest, publicKeyBuffer, 32);
+
+    return true;
+}
+
 static bool getSharedKey(
     const unsigned char* privateKey,
     const unsigned char* publicKey,
