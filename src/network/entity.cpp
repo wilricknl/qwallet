@@ -44,7 +44,7 @@ tl::expected<RespondedEntity, ConnectionError> GetEntity(
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<long long, ConnectionError> GetBalance(
+tl::expected<unsigned long long, ConnectionError> GetBalance(
     const ConnectionPtr& connection,
     const std::string& identity)
 {
@@ -52,6 +52,7 @@ tl::expected<long long, ConnectionError> GetBalance(
     if (response.has_value())
     {
         auto entity = response.value();
+        // todo: do i really have to check that incoming is > than outgoing?
         return entity.entity.incomingAmount - entity.entity.outgoingAmount;
     }
     return tl::make_unexpected(ConnectionError{"Get balance failed: " + response.error().message});

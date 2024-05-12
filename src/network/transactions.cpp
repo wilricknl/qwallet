@@ -20,7 +20,7 @@ std::string StatusToString(Receipt::Status status)
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<Receipt, ConnectionError> BroadcastTransaction(
+tl::expected<Receipt, TransactionError> BroadcastTransaction(
     const ConnectionPtr& connection,
     const Wallet& wallet,
     const std::string& recipient,
@@ -32,21 +32,21 @@ tl::expected<Receipt, ConnectionError> BroadcastTransaction(
     if (!getSubseed((const unsigned char*)wallet.seed.data(), subseed))
     {
         return tl::make_unexpected(
-            ConnectionError{"Failed to compute subseed from seed: " + wallet.seed});
+            TransactionError{"Failed to compute subseed from seed: " + wallet.seed});
     }
 
     unsigned char senderPublicKey[32];
     if (!getPublicKeyFromIdentity((const unsigned char*)wallet.identity.data(), senderPublicKey))
     {
         return tl::make_unexpected(
-            ConnectionError{"Failed to compute public key from identity: " + wallet.identity});
+            TransactionError{"Failed to compute public key from identity: " + wallet.identity});
     }
 
     unsigned char recipientPublicKey[32];
     if (!getPublicKeyFromIdentity((const unsigned char*)recipient.data(), recipientPublicKey))
     {
         return tl::make_unexpected(
-            ConnectionError{"Failed to compute public key from identity: " + recipient});
+            TransactionError{"Failed to compute public key from identity: " + recipient});
     }
 
     // Get current tick
@@ -59,7 +59,7 @@ tl::expected<Receipt, ConnectionError> BroadcastTransaction(
         }
         else
         {
-            return tl::make_unexpected(response.error());
+            return tl::make_unexpected(TransactionError{response.error().message});
         }
     }
 
@@ -95,7 +95,7 @@ tl::expected<Receipt, ConnectionError> BroadcastTransaction(
     if (!connection->Send((char*)&packet, packet.header.size()))
     {
         // todo: maybe interesting to log ip+port, but that is not stored in connection
-        return tl::make_unexpected(ConnectionError{"Failed to send transaction to the network"});
+        return tl::make_unexpected(TransactionError{"Failed to send transaction to the network"});
     }
 
     // Recompute digest for transaction hash

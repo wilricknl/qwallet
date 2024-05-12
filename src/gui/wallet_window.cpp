@@ -3,6 +3,7 @@
 #include <cstring>
 #include <future>
 #include <iostream>
+#include <mutex>
 #include <thread>
 
 #include "core/four_q.h"
@@ -47,6 +48,24 @@ void HelpMarker(const std::string& description)
         ImGui::TextUnformatted(description.c_str());
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
+    }
+}
+
+void TextPopUp(const std::string& label, const std::string& warning)
+{
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowSize(ImVec2{300.0f, 90.0f}, ImGuiCond_Appearing);
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    if (ImGui::BeginPopupModal(label.c_str()))
+    {
+        ImGui::TextWrapped("%s", warning.c_str());
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
 }
 
@@ -433,10 +452,24 @@ void WalletWindow::TransactionTab()
     static char port[6] = "21841";
     ImGui::InputText("Port", port, 6, ImGuiInputTextFlags_CharsDecimal);
 
+    static std::string warningLabel{"Warning"};
+    static std::string warningText;
     if (ImGui::Button("Send"))
     {
-        ImGui::OpenPopup("Confirm transaction");
+        auto result = VerifyTransactionInput(seed, recipientIdentity, ipAddress, port, amount);
+        if (result.has_value())
+        {
+            ImGui::OpenPopup("Confirm transaction");
+        }
+        else
+        {
+            ImGui::OpenPopup(warningLabel.c_str());
+            warningText = result.error().message;
+        }
     }
+
+    // Pop up for warnings
+    TextPopUp(warningLabel, warningText);
 
     // transaction confirmation
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -454,16 +487,14 @@ void WalletWindow::TransactionTab()
 
         if (ImGui::Button("Send", ImVec2(120, 0)))
         {
-            // todo: actual implementattion
-            std::cout << "todo: Sending transaction to node" << std::endl;
+            // todo: actual transaction logic goes here
+
             ImGui::CloseCurrentPopup();
         }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0)))
         {
-            // todo: remove print
-            std::cout << "Cancelling transaction" << std::endl;
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
@@ -509,3 +540,63 @@ bool WalletWindow::Begin(ImGuiWindowFlags flags) { return Window::Begin(flags); 
 
 // ------------------------------------------------------------------------------------------------
 void WalletWindow::End() { Window::End(); }
+
+// ------------------------------------------------------------------------------------------------
+tl::expected<bool, TransactionError> WalletWindow::VerifyTransactionInput(
+    const std::string& seed,
+    const std::string& recipient,
+    const std::string& ipAddress,
+    const std::string& port,
+    unsigned long long amount)
+{
+    ConnectionPtr connection;
+    {
+        auto result = CreateConnection(ipAddress, atoi(port.c_str()));
+        if (!result.has_value())
+        {
+            return tl::make_unexpected(TransactionError{result.error().message});
+        }
+        connection = result.value();
+    }
+
+    if (seed.size() != 55)
+    {
+        return tl::make_unexpected(TransactionError{"Seed is incomplete"});
+    }
+
+    if (recipient.size() != 60)
+    {
+        return tl::make_unexpected(TransactionError{"Recipient is incomplete"});
+    }
+
+    Wallet wallet;
+    {
+        auto result = GenerateWallet(seed);
+        if (!result.has_value())
+        {
+            return tl::make_unexpected(TransactionError{result.error().message});
+        }
+        wallet = result.value();
+    }
+
+    // kinda slow to do it here, but at least it's proper :]
+    // probably need to let a user "sign in" somewhere else, and periodically request balance,
+    // or put this function in a future and open some popup with loading icon idk.
+    unsigned long long balance = 0;
+    {
+        auto result = GetBalance(connection, wallet.identity);
+        if (!result.has_value())
+        {
+            return tl::make_unexpected(TransactionError{result.error().message});
+        }
+        balance = result.value();
+    }
+
+    if (balance < amount)
+    {
+        return tl::make_unexpected(TransactionError{
+            "Requested amount is too big. Your account has " + ToCommaSeparatedString(balance) + " qus."});
+    }
+
+    return true;
+}

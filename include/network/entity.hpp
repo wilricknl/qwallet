@@ -23,6 +23,6 @@ tl::expected<RespondedEntity, ConnectionError> GetEntity(
  * @param identity The identity of the entity to query
  * @return The balance or an error
  */
-tl::expected<long long, ConnectionError> GetBalance(
+tl::expected<unsigned long long, ConnectionError> GetBalance(
     const ConnectionPtr& connection,
     const std::string& identity);

@@ -2,11 +2,10 @@
 
 #include <atomic>
 #include <future>
-#include <mutex>
 
 #include "gui/window.hpp"
+#include "network/transactions.hpp"
 #include "wallet.hpp"
-
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -67,6 +66,23 @@ protected:
      * End render
      */
     void End() override;
+
+protected:
+    /**
+     * Helper function to verify the input of the transaction tab
+     * @param seed The seed of the sender
+     * @param recipient The identity of the recipient
+     * @param ipAddress The ip-address of the node to broadcast to
+     * @param port The port of the node to broadcast to
+     * @param amount The amount to transact
+     * @return `true` upon success, else an error message
+     */
+    tl::expected<bool, TransactionError> VerifyTransactionInput(
+        const std::string& seed,
+        const std::string& recipient,
+        const std::string& ipAddress,
+        const std::string& port,
+        unsigned long long amount);
 
 private:
     /// Is brute force running

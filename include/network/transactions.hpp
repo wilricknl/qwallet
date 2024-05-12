@@ -47,6 +47,15 @@ std::string StatusToString(Receipt::Status status);
 
 // ------------------------------------------------------------------------------------------------
 /**
+ * Struct to wrap transaction error mesasge
+ */
+struct TransactionError
+{
+    std::string message;
+};
+
+// ------------------------------------------------------------------------------------------------
+/**
  * Broadcast a transaction to the Qubic network
  * @param connection The node to broadcast to
  * @param wallet The wallet of the sender
@@ -55,7 +64,7 @@ std::string StatusToString(Receipt::Status status);
  * @param tickOffset The number of ticks in the future to schedule the transaction
  * @return The receipt upon success, else the error that occurred
  */
-tl::expected<Receipt, ConnectionError> BroadcastTransaction(
+tl::expected<Receipt, TransactionError> BroadcastTransaction(
     const ConnectionPtr& connection,
     const Wallet& wallet,
     const std::string& recipient,
