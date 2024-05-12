@@ -7,7 +7,7 @@
 
 #include "core/four_q.h"
 #include "network/connection.hpp"
-#include "network_messages/entity.h"
+#include "network/entity.hpp"
 #include "utility.hpp"
 
 // ------------------------------------------------------------------------------------------------
@@ -355,29 +355,10 @@ void WalletWindow::AccountBalanceTab()
             if (result.has_value())
             {
                 auto connection = result.value();
-
-                // Send request
-                struct
-                {
-                    RequestResponseHeader header;
-                    RequestedEntity request;
-                } packet;
-                packet.header.setSize<sizeof(packet)>();
-                packet.header.randomizeDejavu();
-                packet.header.setType(REQUEST_ENTITY);
-
-                unsigned char public_key[32];
-                // todo: error check maybe
-                getPublicKeyFromIdentity((const unsigned char*)identity, public_key);
-                memcpy(&packet.request.publicKey, public_key, 32);
-
-                connection->Send((char*)&packet, sizeof(packet));
-
-                // Receive response (todo: do something with connection error (maybe eat it))
-                auto response = connection->ReceiveAs<RespondedEntity>(RESPOND_ENTITY);
+                auto response = GetBalance(connection, identity);
                 if (response.has_value())
                 {
-                    return response->entity.incomingAmount - response->entity.outgoingAmount;
+                    return response.value();
                 }
                 std::cout << "Balance request failed: " << response.error().message << std::endl;
             }
@@ -417,15 +398,8 @@ void WalletWindow::TransactionTab()
         ImGuiInputTextFlags_CharsDecimal);
 
     // tick offset
-    static unsigned long long offset = 20;
-    ImGui::InputScalar(
-        "Tick offset",
-        ImGuiDataType_U64,
-        &offset,
-        nullptr,
-        nullptr,
-        nullptr,
-        ImGuiInputTextFlags_CharsDecimal);
+    static int offset = 10;
+    ImGui::SliderInt("Tick offset", &offset, 3, 100, "%d", ImGuiSliderFlags_AlwaysClamp);
 
     ImGui::SameLine();
     HelpMarker("Number of ticks in the future at which the transaction must be executed");
