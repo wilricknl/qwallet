@@ -108,32 +108,32 @@ void WalletWindow::Render()
 // ------------------------------------------------------------------------------------------------
 /**
  * Thread to brute force a specific prefix
- * @param stop_brute_force Atomic boolean to cancel the brute force operation
+ * @param stopBruteForce Atomic boolean to cancel the brute force operation
  * @param prefix The prefix to look for
- * @param out_result The variable to write the result too
- * @param result_mutex Mutex to safely write the result
+ * @param outResult The variable to write the result too
+ * @param resultMutex Mutex to safely write the result
  */
-void brute_force_wallet_thread(
-    std::atomic<bool>& stop_brute_force,
+void BruteForceWalletThread(
+    std::atomic<bool>& stopBruteForce,
     std::string prefix,
-    Wallet& out_result,
-    std::mutex& result_mutex)
+    Wallet& outResult,
+    std::mutex& resultMutex)
 {
     Wallet prefixed_wallet = {};
     while (!GenerateWalletWithPrefix(prefixed_wallet, prefix))
     {
-        if (stop_brute_force)
+        if (stopBruteForce)
         {
             return;
         }
     }
 
     // make other threads stop
-    stop_brute_force = true;
+    stopBruteForce = true;
 
     {
-        std::lock_guard<std::mutex> guard(result_mutex);
-        out_result = prefixed_wallet;
+        std::lock_guard<std::mutex> guard(resultMutex);
+        outResult = prefixed_wallet;
     }
 }
 
@@ -210,26 +210,26 @@ void WalletWindow::WalletGenerationTab()
                 // note: probably something smarter is possible, too busy and dumb to think about it
                 // now
                 m_bruteForceFuture = std::async(std::launch::async, [&]() -> Wallet {
-                    auto max_threads = std::thread::hardware_concurrency();
-                    if (max_threads > 1)
+                    auto maxThreads = std::thread::hardware_concurrency();
+                    if (maxThreads > 1)
                     {
                         // leave 1 for main program/os
-                        max_threads--;
+                        maxThreads--;
                     }
 
                     Wallet result;
-                    std::mutex result_mutex;
+                    std::mutex resultMutex;
 
                     // start threads for bruteforce
                     std::vector<std::thread> threads;
-                    for (unsigned int thread_id = 0; thread_id < max_threads; ++thread_id)
+                    for (unsigned int thread_id = 0; thread_id < maxThreads; ++thread_id)
                     {
                         auto thread = std::thread(
-                            brute_force_wallet_thread,
+                            BruteForceWalletThread,
                             std::ref(m_stopBruteForce),
                             prefix,
                             std::ref(result),
-                            std::ref(result_mutex));
+                            std::ref(resultMutex));
                         threads.push_back(std::move(thread));
                     }
 
@@ -256,8 +256,8 @@ void WalletWindow::WalletGenerationTab()
     ImGui::SeparatorText("Wallet");
 
     ImGui::Text("Seed: %s", wallet.seed.c_str());
-    ImGui::Text("Private key: %s", wallet.private_key.c_str());
-    ImGui::Text("Public key: %s", wallet.public_key.c_str());
+    ImGui::Text("Private key: %s", wallet.privateKey.c_str());
+    ImGui::Text("Public key: %s", wallet.publicKey.c_str());
     ImGui::Text("Identity: %s", wallet.identity.c_str());
 
     if (ImGui::Button("Copy seed"))
@@ -270,14 +270,14 @@ void WalletWindow::WalletGenerationTab()
     if (ImGui::Button("Copy private key"))
     {
         ImGui::LogToClipboard();
-        ImGui::LogText("%s", wallet.private_key.c_str());
+        ImGui::LogText("%s", wallet.privateKey.c_str());
         ImGui::LogFinish();
     }
     ImGui::SameLine();
     if (ImGui::Button("Copy public key"))
     {
         ImGui::LogToClipboard();
-        ImGui::LogText("%s", wallet.public_key.c_str());
+        ImGui::LogText("%s", wallet.publicKey.c_str());
         ImGui::LogFinish();
     }
     ImGui::SameLine();
@@ -292,8 +292,8 @@ void WalletWindow::WalletGenerationTab()
 // ------------------------------------------------------------------------------------------------
 void WalletWindow::AccountBalanceTab()
 {
-    static long long account_balance = 0;
-    ImGui::Text("Account balance: %s", to_comma_separated_string(account_balance).c_str());
+    static long long accountBalance = 0;
+    ImGui::Text("Account balance: %s", ToCommaSeparatedString(accountBalance).c_str());
 
     // identity
     static char identity[61] = "";
@@ -305,13 +305,13 @@ void WalletWindow::AccountBalanceTab()
         UppercaseFilter);
 
     // ip-address
-    static auto text_color = IM_COL32(255, 0, 0, 255);
-    static char ip_address[16] = "";
+    static auto textColor = IM_COL32(255, 0, 0, 255);
+    static char ipAddress[16] = "";
 
-    ImGui::PushStyleColor(ImGuiCol_Text, text_color);
+    ImGui::PushStyleColor(ImGuiCol_Text, textColor);
     bool bInput = ImGui::InputText(
         "Ip address",
-        ip_address,
+        ipAddress,
         16,
         ImGuiInputTextFlags_CallbackCharFilter,
         IpFilter);
@@ -319,13 +319,13 @@ void WalletWindow::AccountBalanceTab()
 
     if (bInput)
     {
-        if (IsValidIp(ip_address))
+        if (IsValidIp(ipAddress))
         {
-            text_color = IM_COL32(0, 255, 0, 255); // green
+            textColor = IM_COL32(0, 255, 0, 255); // green
         }
         else
         {
-            text_color = IM_COL32(255, 0, 0, 255); // red
+            textColor = IM_COL32(255, 0, 0, 255); // red
         }
     }
 
@@ -335,13 +335,13 @@ void WalletWindow::AccountBalanceTab()
 
     // async balance request
     static bool bWaitingForBalance = false;
-    static std::future<long long> balance_future;
+    static std::future<long long> balanceFuture;
 
     if (bWaitingForBalance)
     {
-        if (balance_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+        if (balanceFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
         {
-            account_balance = balance_future.get();
+            accountBalance = balanceFuture.get();
             bWaitingForBalance = false;
         }
     }
@@ -349,9 +349,9 @@ void WalletWindow::AccountBalanceTab()
     if (ImGui::Button("Get balance") && !bWaitingForBalance)
     {
         bWaitingForBalance = true;
-        balance_future = std::async(std::launch::async, [&]() -> long long {
+        balanceFuture = std::async(std::launch::async, [&]() -> long long {
             // Create connection
-            auto result = CreateConnection(ip_address, atoi(port));
+            auto result = CreateConnection(ipAddress, atoi(port));
             if (result.has_value())
             {
                 auto connection = result.value();
@@ -367,6 +367,7 @@ void WalletWindow::AccountBalanceTab()
                 packet.header.setType(REQUEST_ENTITY);
 
                 unsigned char public_key[32];
+                // todo: error check maybe
                 getPublicKeyFromIdentity((const unsigned char*)identity, public_key);
                 memcpy(&packet.request.publicKey, public_key, 32);
 
@@ -430,13 +431,13 @@ void WalletWindow::TransactionTab()
     HelpMarker("Number of ticks in the future at which the transaction must be executed");
 
     // ip-address
-    static auto text_color = IM_COL32(255, 0, 0, 255);
-    static char ip_address[16] = "";
+    static auto textColor = IM_COL32(255, 0, 0, 255);
+    static char ipAddress[16] = "";
 
-    ImGui::PushStyleColor(ImGuiCol_Text, text_color);
+    ImGui::PushStyleColor(ImGuiCol_Text, textColor);
     bool bInput = ImGui::InputText(
         "Ip address",
-        ip_address,
+        ipAddress,
         16,
         ImGuiInputTextFlags_CallbackCharFilter,
         IpFilter);
@@ -444,13 +445,13 @@ void WalletWindow::TransactionTab()
 
     if (bInput)
     {
-        if (IsValidIp(ip_address))
+        if (IsValidIp(ipAddress))
         {
-            text_color = IM_COL32(0, 255, 0, 255); // green
+            textColor = IM_COL32(0, 255, 0, 255); // green
         }
         else
         {
-            text_color = IM_COL32(255, 0, 0, 255); // red
+            textColor = IM_COL32(255, 0, 0, 255); // red
         }
     }
 
@@ -469,7 +470,7 @@ void WalletWindow::TransactionTab()
 
     if (ImGui::BeginPopupModal("Confirm transaction"))
     {
-        ImGui::TextWrapped(R"(Amount: "%s")", to_comma_separated_string(amount).c_str());
+        ImGui::TextWrapped(R"(Amount: "%s")", ToCommaSeparatedString(amount).c_str());
         ImGui::TextWrapped(
             R"(Recipient: "%.*s...%.*s")",
             5,

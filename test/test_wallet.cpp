@@ -8,27 +8,27 @@ TEST_CASE("Seed validation", "[Wallet]")
     // invalid length
     {
         std::string seed = "abcde";
-        std::string error_message;
-        REQUIRE(IsValidSeed(error_message, seed) == false);
-        REQUIRE(error_message == "The seed length is invalid");
+        std::string errorMessage;
+        REQUIRE(IsValidSeed(errorMessage, seed) == false);
+        REQUIRE(errorMessage == "The seed length is invalid");
         REQUIRE(IsValidSeed(seed) == false);
     }
 
     // invalid characters
     {
         std::string seed = "a!cdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcd1";
-        std::string error_message;
-        REQUIRE(IsValidSeed(error_message, seed) == false);
-        REQUIRE(error_message == "Seed contains invalid characters");
+        std::string errorMessage;
+        REQUIRE(IsValidSeed(errorMessage, seed) == false);
+        REQUIRE(errorMessage == "Seed contains invalid characters");
         REQUIRE(IsValidSeed(seed) == false);
     }
 
     // valid
     {
         std::string seed = "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde";
-        std::string error_message;
-        REQUIRE(IsValidSeed(error_message, seed) == true);
-        REQUIRE(error_message.empty());
+        std::string errorMessage;
+        REQUIRE(IsValidSeed(errorMessage, seed) == true);
+        REQUIRE(errorMessage.empty());
         REQUIRE(IsValidSeed(seed) == true);
     }
 }
@@ -76,9 +76,9 @@ TEST_CASE("Wallet generation", "[Wallet]")
 
         REQUIRE(wallet.seed == seed);
         REQUIRE(
-            wallet.private_key == "cctwbaulwuyhybijykxrmxnyrvzbalwryiiahltfwanuafhyfhepcjjgvaec");
+            wallet.privateKey == "cctwbaulwuyhybijykxrmxnyrvzbalwryiiahltfwanuafhyfhepcjjgvaec");
         REQUIRE(
-            wallet.public_key == "bzbqfllbncxemglobhuvftluplvcpquassilfaboffbcadqssupnwlzbqexk");
+            wallet.publicKey == "bzbqfllbncxemglobhuvftluplvcpquassilfaboffbcadqssupnwlzbqexk");
         REQUIRE(wallet.identity == "BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXK");
     }
 }

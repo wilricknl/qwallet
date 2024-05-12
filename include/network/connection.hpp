@@ -41,7 +41,7 @@ public:
      * Factory function
      */
     friend tl::expected<ConnectionPtr, ConnectionError> CreateConnection(
-        const std::string& ip_address,
+        const std::string& ipAddress,
         unsigned short port);
 
     Connection(Connection&& other) noexcept;
@@ -53,10 +53,10 @@ public:
     /**
      * Send data
      * @param buffer The data to be send
-     * @param buffer_length The length of the buffer
+     * @param bufferLength The length of the buffer
      * @return `true` upon success, else `false`
      */
-    bool Send(char* buffer, int buffer_length) const;
+    bool Send(char* buffer, int bufferLength) const;
 
     /**
      * Receive data
@@ -66,11 +66,11 @@ public:
 
     /**
      * Receive data as a specific type
-     * @param header_type The type (index) of the header that should contain the data
+     * @param headerType The type (index) of the header that should contain the data
      * @return The data or encountered error
      */
     template <typename T>
-    tl::expected<T, ConnectionError> ReceiveAs(unsigned char header_type) const;
+    tl::expected<T, ConnectionError> ReceiveAs(unsigned char headerType) const;
 
 private:
     long m_socket;
@@ -78,7 +78,7 @@ private:
 
 // ------------------------------------------------------------------------------------------------
 template <typename T>
-tl::expected<T, ConnectionError> Connection::ReceiveAs(unsigned char header_type) const
+tl::expected<T, ConnectionError> Connection::ReceiveAs(unsigned char headerType) const
 {
     std::vector<char> buffer = Receive();
     if (buffer.empty())
@@ -89,7 +89,7 @@ tl::expected<T, ConnectionError> Connection::ReceiveAs(unsigned char header_type
     for (int offset = 0; offset < buffer.size();)
     {
         auto* header = reinterpret_cast<RequestResponseHeader*>(buffer.data() + offset);
-        if (header->type() == header_type)
+        if (header->type() == headerType)
         {
             // todo: there's also a function to check min/max, which packets have dynamic size?
             if (header->checkPayloadSize(sizeof(T)))
@@ -107,7 +107,7 @@ tl::expected<T, ConnectionError> Connection::ReceiveAs(unsigned char header_type
     }
 
     return tl::make_unexpected(ConnectionError{
-        "Response did not contain header type: " + std::to_string((int)header_type)});
+        "Response did not contain header type: " + std::to_string((int)headerType)});
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -127,13 +127,13 @@ bool DestroyConnection();
  * Create a new connection
  */
 tl::expected<ConnectionPtr, ConnectionError> CreateConnection(
-    const std::string& ip_address,
+    const std::string& ipAddress,
     unsigned short port);
 
 // ------------------------------------------------------------------------------------------------
 /**
  * Check if string contains a valid ip-address
- * @param ip_address The string to check
+ * @param ipAddress The string to check
  * @return `true` if valid, else `false`
  */
-bool IsValidIp(const std::string& ip_address);
+bool IsValidIp(const std::string& ipAddress);

@@ -11,8 +11,8 @@
 struct Wallet
 {
     std::string seed;
-    std::string public_key;
-    std::string private_key;
+    std::string publicKey;
+    std::string privateKey;
     std::string identity;
 };
 
@@ -28,11 +28,11 @@ struct WalletError
 // ------------------------------------------------------------------------------------------------
 /**
  * Check seed upon validity
- * @param out_error_message Return a description of the error
+ * @param outErrorMessage Return a description of the error
  * @param  seed The seed to check
  * @return `true` if valid seed, else `false` 
  */
-bool IsValidSeed(std::string& out_error_message, const std::string& seed);
+bool IsValidSeed(std::string& outErrorMessage, const std::string& seed);
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -52,7 +52,7 @@ std::string GenerateSeed();
 // ------------------------------------------------------------------------------------------------
 /**
  * Generate a wallet with a given seed
- * @param seed 
+ * @param seed The seed to use to generate the wallet
  * @return The generated wallet
  */
 tl::expected<Wallet, WalletError> GenerateWallet(const std::string& seed);

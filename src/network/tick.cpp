@@ -5,7 +5,7 @@
 #include "core/four_q.h"
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<CurrentTickInfo, ConnectionError> getCurrentTickInfo(const ConnectionPtr& connection)
+tl::expected<CurrentTickInfo, ConnectionError> GetCurrentTickInfo(const ConnectionPtr& connection)
 {
     // construct request packet
     struct
@@ -24,9 +24,9 @@ tl::expected<CurrentTickInfo, ConnectionError> getCurrentTickInfo(const Connecti
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<unsigned short, ConnectionError> getTickDuration(const ConnectionPtr& connection)
+tl::expected<unsigned short, ConnectionError> GetTickDuration(const ConnectionPtr& connection)
 {
-    auto info = getCurrentTickInfo(connection);
+    auto info = GetCurrentTickInfo(connection);
     if (info)
     {
         return info->tickDuration;
@@ -35,9 +35,9 @@ tl::expected<unsigned short, ConnectionError> getTickDuration(const ConnectionPt
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<unsigned short, ConnectionError> getEpoch(const ConnectionPtr& connection)
+tl::expected<unsigned short, ConnectionError> GetEpoch(const ConnectionPtr& connection)
 {
-    auto info = getCurrentTickInfo(connection);
+    auto info = GetCurrentTickInfo(connection);
     if (info)
     {
         return info->epoch;
@@ -46,9 +46,9 @@ tl::expected<unsigned short, ConnectionError> getEpoch(const ConnectionPtr& conn
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<unsigned, ConnectionError> getTick(const ConnectionPtr& connection)
+tl::expected<unsigned int, ConnectionError> GetTick(const ConnectionPtr& connection)
 {
-    auto info = getCurrentTickInfo(connection);
+    auto info = GetCurrentTickInfo(connection);
     if (info)
     {
         return info->tick;
@@ -57,10 +57,10 @@ tl::expected<unsigned, ConnectionError> getTick(const ConnectionPtr& connection)
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<unsigned short, ConnectionError> getNumberOfAlignedVotes(
+tl::expected<unsigned short, ConnectionError> GetNumberOfAlignedVotes(
     const ConnectionPtr& connection)
 {
-    auto info = getCurrentTickInfo(connection);
+    auto info = GetCurrentTickInfo(connection);
     if (info)
     {
         return info->numberOfAlignedVotes;
@@ -69,10 +69,10 @@ tl::expected<unsigned short, ConnectionError> getNumberOfAlignedVotes(
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<unsigned short, ConnectionError> getNumberOfMisalignedVotes(
+tl::expected<unsigned short, ConnectionError> GetNumberOfMisalignedVotes(
     const ConnectionPtr& connection)
 {
-    auto info = getCurrentTickInfo(connection);
+    auto info = GetCurrentTickInfo(connection);
     if (info)
     {
         return info->numberOfMisalignedVotes;
@@ -81,9 +81,9 @@ tl::expected<unsigned short, ConnectionError> getNumberOfMisalignedVotes(
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<unsigned, ConnectionError> getInitialTick(const ConnectionPtr& connection)
+tl::expected<unsigned int, ConnectionError> GetInitialTick(const ConnectionPtr& connection)
 {
-    auto info = getCurrentTickInfo(connection);
+    auto info = GetCurrentTickInfo(connection);
     if (info)
     {
         return info->initialTick;
@@ -92,9 +92,9 @@ tl::expected<unsigned, ConnectionError> getInitialTick(const ConnectionPtr& conn
 }
 
 // ------------------------------------------------------------------------------------------------
-tl::expected<BroadcastFutureTickData, ConnectionError> getTickData(
+tl::expected<BroadcastFutureTickData, ConnectionError> GetTickData(
     const ConnectionPtr& connection,
-    unsigned tick)
+    unsigned int tick)
 {
     // Construct request packet
     struct
@@ -119,7 +119,7 @@ tl::expected<BroadcastFutureTickData, ConnectionError> getTickData(
 }
 
 // ------------------------------------------------------------------------------------------------
-bool containsTransaction(const TickData& data, const std::string& hash)
+bool ContainsTransaction(const TickData& data, const std::string& hash)
 {
     unsigned char zeroed[32]{0};
     unsigned char digest[32]{0};

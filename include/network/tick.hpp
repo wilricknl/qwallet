@@ -11,7 +11,7 @@
  * @param connection The node to query
  * @return The tick info upon success, else a connection error
  */
-tl::expected<CurrentTickInfo, ConnectionError> getCurrentTickInfo(const ConnectionPtr& connection);
+tl::expected<CurrentTickInfo, ConnectionError> GetCurrentTickInfo(const ConnectionPtr& connection);
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -19,7 +19,7 @@ tl::expected<CurrentTickInfo, ConnectionError> getCurrentTickInfo(const Connecti
  * @param connection The node to query
  * @return The current tick duration upon success, else a connection error
  */
-tl::expected<unsigned short, ConnectionError> getTickDuration(const ConnectionPtr& connection);
+tl::expected<unsigned short, ConnectionError> GetTickDuration(const ConnectionPtr& connection);
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -27,7 +27,7 @@ tl::expected<unsigned short, ConnectionError> getTickDuration(const ConnectionPt
  * @param connection The node to query
  * @return The current epoch upon success, else a connection error
  */
-tl::expected<unsigned short, ConnectionError> getEpoch(const ConnectionPtr& connection);
+tl::expected<unsigned short, ConnectionError> GetEpoch(const ConnectionPtr& connection);
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -35,7 +35,7 @@ tl::expected<unsigned short, ConnectionError> getEpoch(const ConnectionPtr& conn
  * @param connection The node to query
  * @return The current tick number upon success, else a connection error
  */
-tl::expected<unsigned int, ConnectionError> getTick(const ConnectionPtr& connection);
+tl::expected<unsigned int, ConnectionError> GetTick(const ConnectionPtr& connection);
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -43,7 +43,7 @@ tl::expected<unsigned int, ConnectionError> getTick(const ConnectionPtr& connect
  * @param connection The node to query
  * @return The number of aligned votes upon success, else a connection error
  */
-tl::expected<unsigned short, ConnectionError> getNumberOfAlignedVotes(
+tl::expected<unsigned short, ConnectionError> GetNumberOfAlignedVotes(
     const ConnectionPtr& connection);
 
 // ------------------------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ tl::expected<unsigned short, ConnectionError> getNumberOfAlignedVotes(
  * @param connection The node to query
  * @return The number of misaligned votes upon success, else a connection error
  */
-tl::expected<unsigned short, ConnectionError> getNumberOfMisalignedVotes(
+tl::expected<unsigned short, ConnectionError> GetNumberOfMisalignedVotes(
     const ConnectionPtr& connection);
 
 // ------------------------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ tl::expected<unsigned short, ConnectionError> getNumberOfMisalignedVotes(
  * @param connection The node to query
  * @return The initial tick of the epoch upon success, else a connection error
  */
-tl::expected<unsigned int, ConnectionError> getInitialTick(const ConnectionPtr& connection);
+tl::expected<unsigned int, ConnectionError> GetInitialTick(const ConnectionPtr& connection);
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -70,7 +70,7 @@ tl::expected<unsigned int, ConnectionError> getInitialTick(const ConnectionPtr& 
  * @param tick The tick to request
  * @return The tick data or a connection error
  */
-tl::expected<BroadcastFutureTickData, ConnectionError> getTickData(
+tl::expected<BroadcastFutureTickData, ConnectionError> GetTickData(
     const ConnectionPtr& connection,
     unsigned int tick);
 
@@ -81,4 +81,4 @@ tl::expected<BroadcastFutureTickData, ConnectionError> getTickData(
  * @param hash The hash of the transaction
  * @return `true` if the tick contains the transaction, else `false`
  */
-bool containsTransaction(const TickData& data, const std::string& hash);
+bool ContainsTransaction(const TickData& data, const std::string& hash);

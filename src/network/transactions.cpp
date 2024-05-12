@@ -52,7 +52,7 @@ tl::expected<Receipt, ConnectionError> BroadcastTransaction(
     // Get current tick
     unsigned int tick = 0;
     {
-        auto response = getTick(connection);
+        auto response = GetTick(connection);
         if (response.has_value())
         {
             tick = response.value();

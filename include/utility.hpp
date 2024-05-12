@@ -8,7 +8,7 @@
  * @param amount The amount to convert to string
  * @return The comma separated string representation 
  */
-std::string to_comma_separated_string(long long amount);
+std::string ToCommaSeparatedString(long long amount);
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -16,4 +16,4 @@ std::string to_comma_separated_string(long long amount);
  * @param amount The amount to convert to string
  * @return The comma separated string representation
  */
-std::string to_comma_separated_string(unsigned long long amount);
+std::string ToCommaSeparatedString(unsigned long long amount);
