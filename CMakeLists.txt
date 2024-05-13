@@ -2,13 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 set(qwallet_VERSION 0.1.3)
 
-## Static builds on Windows
-if (MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-	set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
-	set(VCPKG_HOST_TRIPLET "x64-windows-static" CACHE STRING "")
-endif()
-
 project(qwallet
         VERSION ${qwallet_VERSION}
         DESCRIPTION "Qubic desktop wallet (Windows/Linux)"
@@ -25,6 +18,10 @@ include(GNUInstallDirs)
 add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
+## Static builds on Windows
+if (MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES
