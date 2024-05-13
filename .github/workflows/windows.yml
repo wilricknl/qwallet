@@ -26,10 +26,10 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_TOOLCHAIN_FILE=D:/a/qwallet/qwallet/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET="x64-windows-static" -DVCPKG_HOST_TRIPLET="x64-windows-static"
+        cmake .. -DCMAKE_TOOLCHAIN_FILE=D:/a/qwallet/qwallet/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_HOST_TRIPLET="x64-windows-static"
         cmake --build .
 
     - name: Run tests
       run: |
         cd build
-        ./test_qwallet -s
+        .\Debug\test_qwallet
