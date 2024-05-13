@@ -14,7 +14,7 @@ jobs:
 
     env:
       CC:   clang
-      CXX:  g++-10
+      CXX:  g++
 
     steps:
     - uses: actions/checkout@v4
