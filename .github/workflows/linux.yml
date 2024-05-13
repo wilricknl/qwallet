@@ -38,6 +38,6 @@ jobs:
         make
 
     - name: Run tests
-          run: |
-            cd build
-            ./test_qwallet
+      run: |
+        cd build
+        ./test_qwallet
