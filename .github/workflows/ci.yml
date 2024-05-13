@@ -12,13 +12,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      CC:   clang
+      CXX:  g++-10
+
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake gcc g++ make
+        sudo apt-get install -y cmake clang g++ make
 
     - name: Setup vcpkg
       run: |
@@ -32,6 +36,3 @@ jobs:
         cd build
         cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
         make
-      env:
-        CC:   gcc-10
-        CXX:  g++-10
