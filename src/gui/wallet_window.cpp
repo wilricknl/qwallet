@@ -454,17 +454,50 @@ void WalletWindow::TransactionTab()
 
     static std::string warningLabel{"Warning"};
     static std::string warningText;
-    if (ImGui::Button("Send"))
+
+    // async balance request
+    static std::future<tl::expected<bool, TransactionError>> verifyTransactionFuture;
+    static bool bWaitingForTransactionVerification = false;
+
+    // Get verification result from separate thread - possibly move to Update() later
+    if (bWaitingForTransactionVerification)
     {
-        auto result = VerifyTransactionInput(seed, recipientIdentity, ipAddress, port, amount);
-        if (result.has_value())
+        if (verifyTransactionFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
         {
-            ImGui::OpenPopup("Confirm transaction");
+            auto result = verifyTransactionFuture.get();
+            if (result.has_value())
+            {
+                ImGui::OpenPopup("Confirm transaction");
+            }
+            else
+            {
+                warningText = result.error().message;
+                ImGui::OpenPopup(warningLabel.c_str());
+            }
+            bWaitingForTransactionVerification = false;
         }
-        else
+    }
+
+    // Send button
+    if (bWaitingForTransactionVerification)
+    {
+        // Disable send button and show waiting animation
+        std::string label = "Sending ";
+        label += "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3];
+        ImGui::BeginDisabled();
+        ImGui::Button(label.c_str());
+        ImGui::EndDisabled();
+    }
+    else
+    {
+        // Start new transaction
+        if (ImGui::Button("Send"))
         {
-            ImGui::OpenPopup(warningLabel.c_str());
-            warningText = result.error().message;
+            verifyTransactionFuture =
+                std::async(std::launch::async, [&]() -> tl::expected<bool, TransactionError> {
+                    return VerifyTransactionInput(seed, recipientIdentity, ipAddress, port, amount);
+                });
+            bWaitingForTransactionVerification = true;
         }
     }
 
@@ -595,7 +628,8 @@ tl::expected<bool, TransactionError> WalletWindow::VerifyTransactionInput(
     if (balance < amount)
     {
         return tl::make_unexpected(TransactionError{
-            "Requested amount is too big. Your account has " + ToCommaSeparatedString(balance) + " qus."});
+            "Requested amount is too big. Your account has " + ToCommaSeparatedString(balance) +
+            " qus."});
     }
 
     return true;
