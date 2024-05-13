@@ -80,7 +80,5 @@ TEST_CASE("Wallet generation", "[Wallet]")
         REQUIRE(
             wallet.public_key == "bzbqfllbncxemglobhuvftluplvcpquassilfaboffbcadqssupnwlzbqexk");
         REQUIRE(wallet.identity == "BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXK");
-
-        REQUIRE(true);
     }
 }
