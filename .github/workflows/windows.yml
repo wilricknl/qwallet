@@ -1,4 +1,4 @@
-name: Linux workflow
+name: Windows workflow
 
 on:
   push:
@@ -10,25 +10,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    env:
-      CC:   clang
-      CXX:  g++
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake clang g++ make libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
 
     - name: Setup vcpkg
       run: |
         git clone https://github.com/microsoft/vcpkg.git
         cd vcpkg
-        ./bootstrap-vcpkg.sh -disableMetrics
+        .\bootstrap-vcpkg.bat -disableMetrics
 
     - name: Build
       run: |
