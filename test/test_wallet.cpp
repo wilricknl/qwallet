@@ -67,10 +67,10 @@ TEST_CASE("Wallet generation", "[Wallet]")
 
     // valid
     {
-        auto seed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        std::string seed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
         auto result = GenerateWallet(seed);
-        REQUIRE(result.has_value() == true);
+        REQUIRE(result.has_value());
 
         auto wallet = result.value();
 
