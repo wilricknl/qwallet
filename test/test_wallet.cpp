@@ -70,7 +70,7 @@ TEST_CASE("Wallet generation", "[Wallet]")
         auto seed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
         auto result = GenerateWallet(seed);
-        REQUIRE(result.has_value());
+        REQUIRE(result.has_value() == true);
 
         auto wallet = result.value();
 
