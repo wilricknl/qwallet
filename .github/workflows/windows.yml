@@ -12,9 +12,6 @@ jobs:
   build:
     runs-on: windows-latest
 
-    env:
-      VCPKG_TARGET_TRIPLET: x64-windows-static
-
     steps:
     - uses: actions/checkout@v4
 
@@ -29,7 +26,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_TOOLCHAIN_FILE=D:/a/qwallet/qwallet/vcpkg/scripts/buildsystems/vcpkg.cmake
+        cmake .. -G "Visual Studio 17 2022" -A x64
         cmake --build .
 
     - name: Run tests
