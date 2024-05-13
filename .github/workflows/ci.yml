@@ -15,6 +15,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++
+
     - name: Setup vcpkg
       run: |
         git clone https://github.com/microsoft/vcpkg.git
