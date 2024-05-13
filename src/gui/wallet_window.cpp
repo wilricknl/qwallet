@@ -54,7 +54,7 @@ void HelpMarker(const std::string& description)
 void TextPopUp(const std::string& label, const std::string& warning)
 {
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowSize(ImVec2{300.0f, 90.0f}, ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ImVec2{300.0f, 125.0f}, ImGuiCond_Appearing);
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
     if (ImGui::BeginPopupModal(label.c_str()))
@@ -311,7 +311,7 @@ void WalletWindow::WalletGenerationTab()
 // ------------------------------------------------------------------------------------------------
 void WalletWindow::AccountBalanceTab()
 {
-    static long long accountBalance = 0;
+    static unsigned long long accountBalance = 0;
     ImGui::Text("Account balance: %s", ToCommaSeparatedString(accountBalance).c_str());
 
     // identity
@@ -354,37 +354,47 @@ void WalletWindow::AccountBalanceTab()
 
     // async balance request
     static bool bWaitingForBalance = false;
-    static std::future<long long> balanceFuture;
+    static std::future<tl::expected<unsigned long long, ConnectionError>> balanceFuture;
+    static std::string warningLabel{"Warning"};
+    static std::string warningText{};
 
     if (bWaitingForBalance)
     {
         if (balanceFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
         {
-            accountBalance = balanceFuture.get();
+            auto result = balanceFuture.get();
+            if (result.has_value())
+            {
+                accountBalance = result.value();
+            }
+            else
+            {
+                warningText = result.error().message;
+                ImGui::OpenPopup(warningLabel.c_str());
+            }
             bWaitingForBalance = false;
         }
     }
 
+    // Pop up for warnings
+    TextPopUp(warningLabel, warningText);
+
     if (ImGui::Button("Get balance") && !bWaitingForBalance)
     {
         bWaitingForBalance = true;
-        balanceFuture = std::async(std::launch::async, [&]() -> long long {
-            // Create connection
-            auto result = CreateConnection(ipAddress, atoi(port));
-            if (result.has_value())
-            {
-                auto connection = result.value();
-                auto response = GetBalance(connection, identity);
-                if (response.has_value())
+        balanceFuture = std::async(
+            std::launch::async,
+            [&]() -> tl::expected<unsigned long long, ConnectionError> {
+                // Create connection
+                auto result = CreateConnection(ipAddress, atoi(port));
+                if (result.has_value())
                 {
-                    return response.value();
+                    auto connection = result.value();
+                    return GetBalance(connection, identity);
                 }
-                std::cout << "Balance request failed: " << response.error().message << std::endl;
-            }
 
-            // todo: perhaps more interesting error reporting ;-)
-            return -1;
-        });
+                return tl::make_unexpected(result.error());
+            });
     }
 }
 
