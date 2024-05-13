@@ -12,6 +12,9 @@ jobs:
   build:
     runs-on: windows-latest
 
+    env:
+      VCPKG_TARGET_TRIPLET: x64-windows-static
+
     steps:
     - uses: actions/checkout@v4
 
