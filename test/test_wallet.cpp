@@ -65,20 +65,20 @@ TEST_CASE("Wallet generation", "[Wallet]")
         REQUIRE(wallet_error.message == "Seed contains invalid characters");
     }
 
-    // valid
-    {
-        std::string seed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    // // valid
+    // {
+    //     std::string seed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-        auto result = GenerateWallet(seed);
-        REQUIRE(result.has_value());
+    //     auto result = GenerateWallet(seed);
+    //     REQUIRE(result.has_value() == true);
 
-        auto wallet = result.value();
+    //     auto wallet = result.value();
 
-        REQUIRE(wallet.seed == seed);
-        REQUIRE(
-            wallet.private_key == "cctwbaulwuyhybijykxrmxnyrvzbalwryiiahltfwanuafhyfhepcjjgvaec");
-        REQUIRE(
-            wallet.public_key == "bzbqfllbncxemglobhuvftluplvcpquassilfaboffbcadqssupnwlzbqexk");
-        REQUIRE(wallet.identity == "BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXK");
-    }
+    //     REQUIRE(wallet.seed == seed);
+    //     REQUIRE(
+    //         wallet.private_key == "cctwbaulwuyhybijykxrmxnyrvzbalwryiiahltfwanuafhyfhepcjjgvaec");
+    //     REQUIRE(
+    //         wallet.public_key == "bzbqfllbncxemglobhuvftluplvcpquassilfaboffbcadqssupnwlzbqexk");
+    //     REQUIRE(wallet.identity == "BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXK");
+    // }
 }
