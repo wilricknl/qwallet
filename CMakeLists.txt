@@ -6,7 +6,7 @@ project(qwallet
         VERSION ${qwallet_VERSION}
         DESCRIPTION "Qubic desktop wallet (Windows/Linux)"
         HOMEPAGE_URL "https://github.com/wilricknl/qwallet"
-        LANGUAGES CXX)
+        LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
