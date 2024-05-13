@@ -40,4 +40,4 @@ jobs:
     - name: Run tests
       run: |
         cd build
-        ./test_qwallet
+        ./test_qwallet -s
