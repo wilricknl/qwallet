@@ -1,4 +1,4 @@
-name: Pipeline
+name: Linux workflow
 
 on:
   push:
@@ -36,3 +36,8 @@ jobs:
         cd build
         cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
         make
+
+    - name: Run tests
+          run: |
+            cd build
+            ./test_qwallet
