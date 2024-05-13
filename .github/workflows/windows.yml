@@ -26,8 +26,8 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_TOOLCHAIN_FILE=D:/a/qwallet/qwallet/vcpkg/scripts/buildsystems/vcpkg.cmake
-        make
+        cmake .. -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE//vcpkg/scripts/buildsystems/vcpkg.cmake
+        ninja
 
     - name: Run tests
       run: |
