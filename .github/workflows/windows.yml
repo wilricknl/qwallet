@@ -27,7 +27,7 @@ jobs:
         mkdir build
         cd build
         cmake .. -DCMAKE_TOOLCHAIN_FILE=D:/a/qwallet/qwallet/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_DEFAULT_TRIPLET=x64-windows-static
-        ninja
+        cmake --build .
 
     - name: Run tests
       run: |
