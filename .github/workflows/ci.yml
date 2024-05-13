@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake g++ clang++
+        sudo apt-get install -y cmake gcc g++ make
 
     - name: Setup vcpkg
       run: |
@@ -31,4 +31,4 @@ jobs:
         mkdir build
         cd build
         cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
-        cmake --build .
+        make
