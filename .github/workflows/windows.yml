@@ -32,4 +32,4 @@ jobs:
     - name: Run tests
       run: |
         cd build
-        .\Debug\test_qwallet
+        .\Debug\test_qwallet.exe
