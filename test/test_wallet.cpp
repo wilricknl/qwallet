@@ -2,6 +2,9 @@
 
 #include "wallet.hpp"
 
+// todo: remove
+#include <iostream>
+
 // ------------------------------------------------------------------------------------------------
 TEST_CASE("Seed validation", "[Wallet]")
 {
@@ -65,20 +68,31 @@ TEST_CASE("Wallet generation", "[Wallet]")
         REQUIRE(wallet_error.message == "Seed contains invalid characters");
     }
 
-    // // valid
-    // {
-    //     std::string seed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    // valid
+    {
+        std::string seed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-    //     auto result = GenerateWallet(seed);
-    //     REQUIRE(result.has_value() == true);
+        std::cout << "error -1" << std::endl;
 
-    //     auto wallet = result.value();
+        auto result = GenerateWallet(seed);
 
-    //     REQUIRE(wallet.seed == seed);
-    //     REQUIRE(
-    //         wallet.private_key == "cctwbaulwuyhybijykxrmxnyrvzbalwryiiahltfwanuafhyfhepcjjgvaec");
-    //     REQUIRE(
-    //         wallet.public_key == "bzbqfllbncxemglobhuvftluplvcpquassilfaboffbcadqssupnwlzbqexk");
-    //     REQUIRE(wallet.identity == "BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXK");
-    // }
+
+        std::cout << "error 0" << std::endl;
+        REQUIRE(result.has_value() == true);
+
+        std::cout << "error 1" << std::endl;
+        auto wallet = result.value();
+
+std::cout << "error 2" << std::endl;
+        REQUIRE(wallet.seed == seed);
+        std::cout << "error 3" << std::endl;
+        REQUIRE(
+            wallet.private_key == "cctwbaulwuyhybijykxrmxnyrvzbalwryiiahltfwanuafhyfhepcjjgvaec");
+        
+        std::cout << "error 4" << std::endl;
+        REQUIRE(
+            wallet.public_key == "bzbqfllbncxemglobhuvftluplvcpquassilfaboffbcadqssupnwlzbqexk");
+       std::cout << "error 5" << std::endl;
+        REQUIRE(wallet.identity == "BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXK");
+    }
 }
