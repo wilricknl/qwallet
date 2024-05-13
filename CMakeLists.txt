@@ -6,6 +6,7 @@ set(qwallet_VERSION 0.1.3)
 if (MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
+	set(VCPKG_HOST_TRIPLET "x64-windows-static" CACHE STRING "")
 endif()
 
 project(qwallet
