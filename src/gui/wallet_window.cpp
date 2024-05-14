@@ -90,7 +90,10 @@ WalletWindow::~WalletWindow()
 }
 
 // ------------------------------------------------------------------------------------------------
-void WalletWindow::Update(GLFWwindow* glfwWindow, double deltaTime) {}
+void WalletWindow::Update(GLFWwindow* glfwWindow, double deltaTime)
+{
+    // todo: get latest tick from network and check for receipts that are still confirming
+}
 
 // ------------------------------------------------------------------------------------------------
 void WalletWindow::Render()
@@ -465,7 +468,8 @@ void WalletWindow::TransactionTab()
     static std::string warningLabel{"Warning"};
     static std::string warningText;
 
-    // async balance request
+    // - - - - - - - - - - -
+    // Async balance request
     static std::future<tl::expected<bool, TransactionError>> verifyTransactionFuture;
     static bool bWaitingForTransactionVerification = false;
 
@@ -485,6 +489,43 @@ void WalletWindow::TransactionTab()
                 ImGui::OpenPopup(warningLabel.c_str());
             }
             bWaitingForTransactionVerification = false;
+        }
+    }
+
+    // - - - - - - - - - - - -
+    // Async broadcast request
+    static std::future<tl::expected<Receipt, TransactionError>> broadcastTransactionFuture;
+    static bool bWaitingForTransactionBroadcast = false;
+
+    if (bWaitingForTransactionBroadcast)
+    {
+        if (broadcastTransactionFuture.wait_for(std::chrono::seconds(0)) ==
+            std::future_status::ready)
+        {
+            auto result = broadcastTransactionFuture.get();
+            if (result.has_value())
+            {
+                std::cout << "Successfully broadcasted transaction" << std::endl;
+
+                // todo: temporarily print receipt for testing
+                auto receipt = result.value();
+                std::cout << "[Receipt]" << std::endl;
+                std::cout << "\tSender: " << receipt.sender << std::endl;
+                std::cout << "\tRecipient: " << receipt.recipient << std::endl;
+                std::cout << "\tHash: " << receipt.hash << std::endl;
+                std::cout << "\tAmount: " << receipt.amount << std::endl;
+                std::cout << "\tTick: " << receipt.tick << std::endl;
+                std::cout << "\tStatus: " << StatusToString(receipt.status) << std::endl;
+
+                // todo: add receipt to some buffer
+            }
+            else
+            {
+                // Some error occurred, show it in a popup
+                warningText = result.error().message;
+                ImGui::OpenPopup(warningLabel.c_str());
+            }
+            bWaitingForTransactionBroadcast = false;
         }
     }
 
@@ -530,7 +571,28 @@ void WalletWindow::TransactionTab()
 
         if (ImGui::Button("Send", ImVec2(120, 0)))
         {
-            // todo: actual transaction logic goes here
+            broadcastTransactionFuture = std::async(
+                std::launch::async,
+                [&]() -> tl::expected<Receipt, TransactionError> {
+                    auto connection = CreateConnection(ipAddress, atoi(port));
+                    if (!connection.has_value())
+                    {
+                        return tl::make_unexpected(TransactionError{connection.error().message});
+                    }
+
+                    auto wallet = GenerateWallet(seed);
+                    if (!wallet.has_value())
+                    {
+                        return tl::make_unexpected(TransactionError{wallet.error().message});
+                    }
+                    return BroadcastTransaction(
+                        connection.value(),
+                        wallet.value(),
+                        recipientIdentity,
+                        amount,
+                        offset);
+                });
+            bWaitingForTransactionBroadcast = true;
 
             ImGui::CloseCurrentPopup();
         }
@@ -556,7 +618,7 @@ void WalletWindow::TransactionTab()
         ImGui::TableSetupColumn("Status");
         ImGui::TableHeadersRow();
 
-        // todo: row logic
+        // todo: use stored receipts for visualization
         for (int i = 0; i < 4; ++i)
         {
             ImGui::TableNextRow();
