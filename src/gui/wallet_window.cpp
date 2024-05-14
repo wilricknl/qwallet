@@ -9,6 +9,7 @@
 #include "core/four_q.h"
 #include "network/connection.hpp"
 #include "network/entity.hpp"
+#include "network/tick.hpp"
 #include "utility.hpp"
 
 // ------------------------------------------------------------------------------------------------
@@ -108,7 +109,145 @@ WalletWindow::~WalletWindow()
 // ------------------------------------------------------------------------------------------------
 void WalletWindow::Update(GLFWwindow* glfwWindow, double deltaTime)
 {
-    // todo: get latest tick from network and check for receipts that are still confirming
+    // Quick timer from deltaTime without using chrono and other stuffs
+    static double timer = 0.0;
+    timer += deltaTime;
+
+    // - - - - - - - - - - - - - - - - - - - -
+    // Check actual tick data for transactions
+    static std::future<tl::expected<BroadcastFutureTickData, ConnectionError>> tickDataFuture;
+    static bool bWaitingForTickData{false};
+
+    if (bWaitingForTickData)
+    {
+        if (tickDataFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+        {
+            auto result = tickDataFuture.get();
+            if (result.has_value())
+            {
+                auto tickData = result.value().tickData;
+                std::cout << "Processing tick " << tickData.tick << std::endl;
+
+                auto it = m_confirmingTransactions.begin();
+                while (it != m_confirmingTransactions.end())
+                {
+                    if (it->tick == tickData.tick)
+                    {
+                        if (ContainsTransaction(tickData, it->hash))
+                        {
+                            it->status = Receipt::Success;
+                        }
+                        else
+                        {
+                            it->status = Receipt::Failed;
+                        }
+
+                        std::cout << "Confirmed (" << StatusToString(it->status)
+                                  << ") transaction hash " << it->hash << " in tick "
+                                  << tickData.tick << std::endl;
+
+                        m_history.push_back(*it);
+                        it = m_confirmingTransactions.erase(it);
+                    }
+                    else
+                    {
+                        ++it;
+                    }
+                }
+            }
+            else
+            {
+                std::cout << "Failed to query tick data: " << result.error().message << std::endl;
+            }
+
+            bWaitingForTickData = false;
+        }
+    }
+
+    // - - - - - - - - - - - - - -
+    // Request current tick number
+    static std::future<tl::expected<unsigned int, ConnectionError>> tickFuture;
+    static bool bWaitingForTick{false};
+    static unsigned int latestTick{0};
+
+    if (bWaitingForTick)
+    {
+        if (tickFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+        {
+            auto result = tickFuture.get();
+            if (result.has_value())
+            {
+                latestTick = result.value();
+                std::cout << "Received latest tick: " << latestTick << std::endl;
+            }
+            else
+            {
+                std::cout << "Failed to query latest tick: " << result.error().message << std::endl;
+            }
+
+            bWaitingForTick = false;
+        }
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check if ticks can be confirmed if currently not confirming
+    if (!bWaitingForTickData && latestTick != 0)
+    {
+        unsigned int tickToConfirm = 0;
+        bool bCanConfirmReceipt = false;
+        for (const auto& receipt : m_confirmingTransactions)
+        {
+            if (receipt.tick < latestTick)
+            {
+                tickToConfirm = receipt.tick;
+                bCanConfirmReceipt = true;
+                break;
+            }
+        }
+
+        if (bCanConfirmReceipt)
+        {
+            std::cout << "Requesting tick data of tick " << tickToConfirm << std::endl;
+            tickDataFuture = std::async(
+                std::launch::async,
+                [=]() -> tl::expected<BroadcastFutureTickData, ConnectionError> {
+                    // todo: remove hardcoded connection
+                    auto connection = CreateConnection("185.130.227.189", 21841);
+                    if (!connection.has_value())
+                    {
+                        return tl::make_unexpected(connection.error());
+                    }
+
+                    return GetTickData(connection.value(), tickToConfirm);
+                });
+            bWaitingForTickData = true;
+        }
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check transaction confirmations once per second
+    if (timer > 1.0)
+    {
+        // Query latest tick for transactions that need to be confirmed
+        if (!bWaitingForTick && !m_confirmingTransactions.empty())
+        {
+            tickFuture = std::async(
+                std::launch::async,
+                [&]() -> tl::expected<unsigned int, ConnectionError> {
+                    // todo: remove hardcoded connection
+                    auto connection = CreateConnection("185.130.227.189", 21841);
+                    if (!connection.has_value())
+                    {
+                        return tl::make_unexpected(connection.error());
+                    }
+
+                    return GetTick(connection.value());
+                });
+            bWaitingForTick = true;
+        }
+
+        timer -= 1.0;
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -635,7 +774,7 @@ void WalletWindow::TransactionTab()
         ImGui::TableSetupColumn("Status");
         ImGui::TableHeadersRow();
 
-        // todo: add confirmed receipts
+        CreateReceiptTableRows(m_history);
         CreateReceiptTableRows(m_confirmingTransactions);
 
         ImGui::EndTable();
