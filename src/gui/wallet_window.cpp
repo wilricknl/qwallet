@@ -211,8 +211,7 @@ void WalletWindow::Update(GLFWwindow* glfwWindow, double deltaTime)
             tickDataFuture = std::async(
                 std::launch::async,
                 [=]() -> tl::expected<BroadcastFutureTickData, ConnectionError> {
-                    // todo: remove hardcoded connection
-                    auto connection = CreateConnection("185.130.227.189", 21841);
+                    auto connection = CreateConnection(m_ipAddress, atoi(m_port.c_str()));
                     if (!connection.has_value())
                     {
                         return tl::make_unexpected(connection.error());
@@ -234,8 +233,7 @@ void WalletWindow::Update(GLFWwindow* glfwWindow, double deltaTime)
             tickFuture = std::async(
                 std::launch::async,
                 [&]() -> tl::expected<unsigned int, ConnectionError> {
-                    // todo: remove hardcoded connection
-                    auto connection = CreateConnection("185.130.227.189", 21841);
+                    auto connection = CreateConnection(m_ipAddress, atoi(m_port.c_str()));
                     if (!connection.has_value())
                     {
                         return tl::make_unexpected(connection.error());
@@ -614,11 +612,15 @@ void WalletWindow::TransactionTab()
         {
             textColor = IM_COL32(255, 0, 0, 255); // red
         }
+        m_ipAddress = ipAddress;
     }
 
     // port
     static char port[6] = "21841";
-    ImGui::InputText("Port", port, 6, ImGuiInputTextFlags_CharsDecimal);
+    if (ImGui::InputText("Port", port, 6, ImGuiInputTextFlags_CharsDecimal))
+    {
+        m_port = port;
+    }
 
     static std::string warningLabel{"Warning"};
     static std::string warningText;

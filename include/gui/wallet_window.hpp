@@ -105,4 +105,8 @@ private:
 
     /// Transactions that are not confirmed yet
     std::vector<Receipt> m_confirmingTransactions;
+
+    /// todo: read these from some configuration file
+    std::string m_ipAddress{};
+    std::string m_port{"21841"};
 };
