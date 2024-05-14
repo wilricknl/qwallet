@@ -3,16 +3,17 @@
 #include <cryptopp/integer.h>
 #include <cryptopp/osrng.h>
 
+#include <cstring>
 #include <iostream>
 
 #include "core/four_q.h"
 
 // ------------------------------------------------------------------------------------------------
-bool IsValidSeed(std::string& out_error_message, const std::string& seed)
+bool IsValidSeed(std::string& outErrorMessage, const std::string& seed)
 {
     if (seed.length() != 55)
     {
-        out_error_message = "The seed length is invalid";
+        outErrorMessage = "The seed length is invalid";
         return false;
     }
 
@@ -20,7 +21,7 @@ bool IsValidSeed(std::string& out_error_message, const std::string& seed)
     {
         if (c < 'a' || c > 'z')
         {
-            out_error_message = "Seed contains invalid characters";
+            outErrorMessage = "Seed contains invalid characters";
             return false;
         }
     }
@@ -31,8 +32,8 @@ bool IsValidSeed(std::string& out_error_message, const std::string& seed)
 // ------------------------------------------------------------------------------------------------
 bool IsValidSeed(const std::string& seed)
 {
-    std::string ignored_error_message;
-    return IsValidSeed(ignored_error_message, seed);
+    std::string ignoredErrorMessage;
+    return IsValidSeed(ignoredErrorMessage, seed);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -40,13 +41,13 @@ std::string GenerateSeed()
 {
     std::string seed{};
 
-    auto random_pool = CryptoPP::AutoSeededRandomPool();
+    auto randomPool = CryptoPP::AutoSeededRandomPool();
     const auto min = CryptoPP::Integer(97);  // 'a'
     const auto max = CryptoPP::Integer(122); // 'z'
 
     for (int i = 0; i < 55; i++)
     {
-        seed += static_cast<char>(CryptoPP::Integer(random_pool, min, max).ConvertToLong());
+        seed += static_cast<char>(CryptoPP::Integer(randomPool, min, max).ConvertToLong());
     }
 
     return seed;
@@ -55,34 +56,66 @@ std::string GenerateSeed()
 // ------------------------------------------------------------------------------------------------
 tl::expected<Wallet, WalletError> GenerateWallet(const std::string& seed)
 {
-    std::string error_message;
-    if (!IsValidSeed(error_message, seed))
+    std::string errorMessage;
+    if (!IsValidSeed(errorMessage, seed))
     {
-        return tl::make_unexpected(WalletError{error_message});
+        return tl::make_unexpected(WalletError{errorMessage});
     }
 
-    uint8_t private_key[32] = {0};
-    uint8_t public_key[32] = {0};
+    uint8_t privateKey[32] = {0};
+    uint8_t publicKey[32] = {0};
     uint8_t subseed[32] = {0};
 
-    char private_key_ascii[61] = {0};
-    char public_key_ascii[61] = {0};
-    char public_identity[61] = {0};
+    char privateKeyAscii[61] = {0};
+    char publicKeyAscii[61] = {0};
+    char publicIdentity[61] = {0};
 
     getSubseed((const uint8_t*)seed.data(), subseed);
+    getPrivateKey(subseed, privateKey);
+    getPublicKey(privateKey, publicKey);
 
-    getPrivateKey(subseed, private_key);
-    getPublicKey(private_key, public_key);
+    getIdentity(privateKey, privateKeyAscii, true);
+    getIdentity(publicKey, publicKeyAscii, true);
+    getIdentity(publicKey, publicIdentity, false);
 
-    getIdentity(private_key, private_key_ascii, true);
-    getIdentity(public_key, public_key_ascii, true);
-    getIdentity(public_key, public_identity, false);
-
-    return Wallet{seed, public_key_ascii, private_key_ascii, public_identity};
+    return Wallet{seed, publicKeyAscii, privateKeyAscii, publicIdentity};
 }
 
 // ------------------------------------------------------------------------------------------------
 Wallet GenerateWallet() { return GenerateWallet(GenerateSeed()).value(); }
+
+// ------------------------------------------------------------------------------------------------
+bool GenerateWalletWithPrefix(Wallet& out_wallet, const std::string& prefix)
+{
+    auto seed = GenerateSeed();
+
+    uint8_t privateKey[32] = {0};
+    uint8_t publicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+
+    getSubseed((const uint8_t*)seed.data(), subseed);
+    getPrivateKey(subseed, privateKey);
+    getPublicKey(privateKey, publicKey);
+
+    char publicIdentity[61] = {0};
+    getIdentity(publicKey, publicIdentity, false);
+
+    // check prefix
+    if (memcmp(publicIdentity, prefix.c_str(), prefix.length()) != 0)
+    {
+        return false;
+    }
+
+    // compute other identities
+    char privateKeyAscii[61] = {0};
+    char publicKeyAscii[61] = {0};
+    getIdentity(privateKey, privateKeyAscii, true);
+    getIdentity(publicKey, publicKeyAscii, true);
+
+    out_wallet = Wallet{seed, publicKeyAscii, privateKeyAscii, publicIdentity};
+
+    return true;
+}
 
 // ------------------------------------------------------------------------------------------------
 void PrintWallet(const std::string& seed)

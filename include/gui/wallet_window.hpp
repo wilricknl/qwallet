@@ -1,6 +1,11 @@
 #pragma once
 
-#include "window.hpp"
+#include <atomic>
+#include <future>
+
+#include "gui/window.hpp"
+#include "network/transactions.hpp"
+#include "wallet.hpp"
 
 // ------------------------------------------------------------------------------------------------
 /**
@@ -15,10 +20,12 @@ public:
      * @param bShow Should show the window
      * @param bCanClose Can close the window
      */
-    explicit WalletWindow(
-        std::string name,
-        bool bShow,
-        bool bCanClose = true);
+    explicit WalletWindow(std::string name, bool bShow, bool bCanClose = true);
+
+    /**
+     * Destructor
+     */
+    ~WalletWindow();
 
     /**
      * Next program step
@@ -43,6 +50,17 @@ protected:
      */
     void AccountBalanceTab();
 
+    /**
+     * Tab to make transactions
+     */
+    void TransactionTab();
+
+    /**
+     * Add rows for receipts in the history table
+     * @param receipts The receipts to add
+     */
+    void CreateReceiptTableRows(const std::vector<Receipt>& receipts) const;
+
 protected:
     /**
      * Begin render
@@ -55,6 +73,40 @@ protected:
      */
     void End() override;
 
-private:
+protected:
+    /**
+     * Helper function to verify the input of the transaction tab
+     * @param seed The seed of the sender
+     * @param recipient The identity of the recipient
+     * @param ipAddress The ip-address of the node to broadcast to
+     * @param port The port of the node to broadcast to
+     * @param amount The amount to transact
+     * @return `true` upon success, else an error message
+     */
+    tl::expected<bool, TransactionError> VerifyTransactionInput(
+        const std::string& seed,
+        const std::string& recipient,
+        const std::string& ipAddress,
+        const std::string& port,
+        unsigned long long amount);
 
+private:
+    /// Is brute force running
+    bool m_bWaitingForBruteForce = false;
+
+    /// Future to receive brute force result
+    std::future<Wallet> m_bruteForceFuture;
+
+    /// Tell brute force threads to stop
+    std::atomic<bool> m_stopBruteForce = false;
+
+    /// History of transactions made during the runtime of the program
+    std::vector<Receipt> m_history;
+
+    /// Transactions that are not confirmed yet
+    std::vector<Receipt> m_confirmingTransactions;
+
+    /// todo: read these from some configuration file
+    std::string m_ipAddress{};
+    std::string m_port{"21841"};
 };

@@ -5,6 +5,8 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_internal.h>
 
+#include "fonts/raleway.hpp"
+#include "gui/dpi.hpp"
 #include "gui/wallet_window.hpp"
 
 // ------------------------------------------------------------------------------------------------
@@ -95,6 +97,15 @@ bool QWallet::Initialize(GLFWwindow* window, const std::string& glVersion)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui::StyleColorsDark();
+
+    // Take dpi scale into account
+    const float scale = GetDpiScale();
+    ImGui::GetStyle().ScaleAllSizes(scale);
+    io.Fonts->AddFontFromMemoryCompressedBase85TTF(
+        raleway_compressed_data_base85,
+        14.0f * scale,
+        nullptr,
+        io.Fonts->GetGlyphRangesCyrillic());
 
     return ImGui_ImplGlfw_InitForOpenGL(window, true) && ImGui_ImplOpenGL3_Init(glVersion.c_str());
 }

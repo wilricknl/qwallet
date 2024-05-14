@@ -45,20 +45,20 @@ Connection& Connection::operator=(Connection&& other) noexcept
 Connection::~Connection() { close(m_socket); }
 
 // ------------------------------------------------------------------------------------------------
-bool Connection::Send(char* buffer, int buffer_length) const
+bool Connection::Send(char* buffer, int bufferLength) const
 {
-    int total_sent = 0;
-    int bytes_left = buffer_length;
+    int totalSent = 0;
+    int bytesLeft = bufferLength;
 
-    while (total_sent < buffer_length)
+    while (totalSent < bufferLength)
     {
-        int result = send(m_socket, buffer + total_sent, bytes_left, 0);
+        int result = send(m_socket, buffer + totalSent, bytesLeft, 0);
         if (result == -1)
         {
             return false;
         }
-        total_sent += result;
-        bytes_left -= result;
+        totalSent += result;
+        bytesLeft -= result;
     }
 
     return true;
@@ -106,10 +106,10 @@ bool DestroyConnection()
 
 // ------------------------------------------------------------------------------------------------
 tl::expected<ConnectionPtr, ConnectionError> CreateConnection(
-    const std::string& ip_address,
+    const std::string& ipAddress,
     unsigned short port)
 {
-    int client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 
 #ifdef _MSC_VER
     size_t tv = 1000;
@@ -119,31 +119,31 @@ tl::expected<ConnectionPtr, ConnectionError> CreateConnection(
     tv.tv_usec = 0;
 #endif
 
-    setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
-    setsockopt(client_socket, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+    setsockopt(clientSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+    setsockopt(clientSocket, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
 
-    sockaddr_in server_address;
-    memset((char*)&server_address, 0, sizeof(server_address));
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(port);
+    sockaddr_in serverAddress;
+    memset((char*)&serverAddress, 0, sizeof(serverAddress));
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(port);
 
-    if (inet_pton(AF_INET, ip_address.c_str(), &server_address.sin_addr) <= 0)
+    if (inet_pton(AF_INET, ipAddress.c_str(), &serverAddress.sin_addr) <= 0)
     {
-        return tl::make_unexpected(ConnectionError{"Invalid ip-address: " + ip_address});
+        return tl::make_unexpected(ConnectionError{"Invalid ip-address: " + ipAddress});
     }
 
-    if (connect(client_socket, (const sockaddr*)&server_address, sizeof(server_address)) != 0)
+    if (connect(clientSocket, (const sockaddr*)&serverAddress, sizeof(serverAddress)) != 0)
     {
-        return tl::make_unexpected(ConnectionError{"Failed to connect with: " + ip_address});
+        return tl::make_unexpected(ConnectionError{"Failed to connect with: " + ipAddress});
     }
 
-    Connection connection{client_socket};
+    Connection connection{clientSocket};
     return std::make_shared<Connection>(std::move(connection));
 }
 
 // ------------------------------------------------------------------------------------------------
-bool IsValidIp(const std::string& ip_address)
+bool IsValidIp(const std::string& ipAddress)
 {
     sockaddr_in address;
-    return inet_pton(AF_INET, ip_address.c_str(), &address.sin_addr) == 1;
+    return inet_pton(AF_INET, ipAddress.c_str(), &address.sin_addr) == 1;
 }

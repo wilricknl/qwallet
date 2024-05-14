@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(qwallet_VERSION 0.1.3)
+set(qwallet_VERSION 0.2.0)
 
 project(qwallet
         VERSION ${qwallet_VERSION}
@@ -35,6 +35,10 @@ find_package(imgui CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(tl-expected CONFIG REQUIRED)
 
+if (NOT WIN32)
+	find_package(X11 REQUIRED)
+endif ()
+
 include_directories(include)
 
 # -----------------------------------------------------------------------------
@@ -43,11 +47,16 @@ include_directories(include)
 
 add_library(
 	qwallet_library
+	src/utility.cpp
 	src/wallet.cpp
+	src/gui/dpi.cpp
 	src/gui/qwallet.cpp
 	src/gui/wallet_window.cpp
 	src/gui/window.cpp
-	src/network/connection.cpp)
+	src/network/connection.cpp
+	src/network/entity.cpp
+	src/network/tick.cpp
+	src/network/transactions.cpp)
 target_link_libraries(
 	qwallet_library
 	PRIVATE
@@ -58,6 +67,7 @@ target_link_libraries(
 	OpenGL::GL
 	tl::expected)
 if(NOT WIN32)
+	target_link_libraries(qwallet_library PRIVATE ${X11_LIBRARIES})
 	target_compile_options(qwallet_library PRIVATE "-march=native")
 endif()
 # todo (wilricknl): figure out how to include tl header files with library
@@ -107,6 +117,7 @@ target_link_libraries(
 
 add_executable(
 	test_qwallet
+	test/test_utility.cpp
 	test/test_wallet.cpp)
 target_link_libraries(
 	test_qwallet
