@@ -55,6 +55,12 @@ protected:
      */
     void TransactionTab();
 
+    /**
+     * Add rows for receipts in the history table
+     * @param receipts The receipts to add
+     */
+    void CreateReceiptTableRows(const std::vector<Receipt>& receipts) const;
+
 protected:
     /**
      * Begin render
@@ -93,4 +99,10 @@ private:
 
     /// Tell brute force threads to stop
     std::atomic<bool> m_stopBruteForce = false;
+
+    /// History of transactions made during the runtime of the program
+    std::vector<Receipt> m_history;
+
+    /// Transactions that are not confirmed yet
+    std::vector<Receipt> m_confirmingTransactions;
 };

@@ -69,6 +69,22 @@ void TextPopUp(const std::string& label, const std::string& warning)
     }
 }
 
+unsigned int StatusToColor(Receipt::Status status)
+{
+    if (status == Receipt::Success)
+    {
+
+        return IM_COL32(0, 255, 0, 255);
+    }
+    if (status == Receipt::Confirming)
+    {
+
+        return IM_COL32(255, 165, 0, 255);
+    }
+    // otherwise red => indicating failure
+    return IM_COL32(255, 0, 0, 255);
+}
+
 } // namespace
 // ------------------------------------------------------------------------------------------------
 
@@ -517,7 +533,7 @@ void WalletWindow::TransactionTab()
                 std::cout << "\tTick: " << receipt.tick << std::endl;
                 std::cout << "\tStatus: " << StatusToString(receipt.status) << std::endl;
 
-                // todo: add receipt to some buffer
+                m_confirmingTransactions.push_back(receipt);
             }
             else
             {
@@ -571,9 +587,8 @@ void WalletWindow::TransactionTab()
 
         if (ImGui::Button("Send", ImVec2(120, 0)))
         {
-            broadcastTransactionFuture = std::async(
-                std::launch::async,
-                [&]() -> tl::expected<Receipt, TransactionError> {
+            broadcastTransactionFuture =
+                std::async(std::launch::async, [&]() -> tl::expected<Receipt, TransactionError> {
                     auto connection = CreateConnection(ipAddress, atoi(port));
                     if (!connection.has_value())
                     {
@@ -618,25 +633,55 @@ void WalletWindow::TransactionTab()
         ImGui::TableSetupColumn("Status");
         ImGui::TableHeadersRow();
 
-        // todo: use stored receipts for visualization
-        for (int i = 0; i < 4; ++i)
-        {
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("AAA...BBB");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("CCC...DDD");
-            ImGui::TableSetColumnIndex(2);
-            ImGui::Text("12345");
-            ImGui::TableSetColumnIndex(3);
-            ImGui::Text("1245002");
-            ImGui::TableSetColumnIndex(4);
-            ImGui::Text("0xABCDABCDABCDABCD");
-            ImGui::TableSetColumnIndex(5);
-            ImGui::Text("Confirming");
-        }
+        // todo: add confirmed receipts
+        CreateReceiptTableRows(m_confirmingTransactions);
 
         ImGui::EndTable();
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+void WalletWindow::CreateReceiptTableRows(const std::vector<Receipt>& receipts) const
+{
+    for (const auto& receipt : receipts)
+    {
+        ImGui::TableNextRow();
+
+        // Sender
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextWrapped(
+            "%.*s...%.*s",
+            5,
+            receipt.sender.c_str(),
+            5,
+            receipt.sender.c_str() + 55);
+
+        // Recipient
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextWrapped(
+            "%.*s...%.*s",
+            5,
+            receipt.recipient.c_str(),
+            5,
+            receipt.recipient.c_str() + 55);
+
+        // Amount
+        ImGui::TableSetColumnIndex(2);
+        ImGui::Text("%lld", receipt.amount);
+
+        // Tick
+        ImGui::TableSetColumnIndex(3);
+        ImGui::Text("%u", receipt.tick);
+
+        // Hash
+        ImGui::TableSetColumnIndex(4);
+        ImGui::Text("%s", receipt.hash.c_str());
+
+        // Status
+        ImGui::TableSetColumnIndex(5);
+        ImGui::PushStyleColor(ImGuiCol_Text, StatusToColor(receipt.status));
+        ImGui::Text("%s", StatusToString(receipt.status).c_str());
+        ImGui::PopStyleColor();
     }
 }
 
