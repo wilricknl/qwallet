@@ -622,6 +622,8 @@ void WalletWindow::TransactionTab()
 
     ImGui::SeparatorText("Transaction history");
 
+    ImGui::Text("Data can be copied to clipboard with left click");
+
     // Transaction overview table
     if (ImGui::BeginTable("Transactions", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
     {
@@ -649,33 +651,53 @@ void WalletWindow::CreateReceiptTableRows(const std::vector<Receipt>& receipts) 
 
         // Sender
         ImGui::TableSetColumnIndex(0);
-        ImGui::TextWrapped(
-            "%.*s...%.*s",
-            5,
-            receipt.sender.c_str(),
-            5,
-            receipt.sender.c_str() + 55);
+        ImGui::Text("%.*s...%.*s", 5, receipt.sender.c_str(), 5, receipt.sender.c_str() + 55);
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            ImGui::LogToClipboard();
+            ImGui::LogText("%s", receipt.sender.c_str());
+            ImGui::LogFinish();
+        }
 
         // Recipient
         ImGui::TableSetColumnIndex(1);
-        ImGui::TextWrapped(
-            "%.*s...%.*s",
-            5,
-            receipt.recipient.c_str(),
-            5,
-            receipt.recipient.c_str() + 55);
+        ImGui::Text("%.*s...%.*s", 5, receipt.recipient.c_str(), 5, receipt.recipient.c_str() + 55);
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            ImGui::LogToClipboard();
+            ImGui::LogText("%s", receipt.recipient.c_str());
+            ImGui::LogFinish();
+        }
 
         // Amount
         ImGui::TableSetColumnIndex(2);
         ImGui::Text("%lld", receipt.amount);
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            ImGui::LogToClipboard();
+            ImGui::LogText("%lld", receipt.amount);
+            ImGui::LogFinish();
+        }
 
         // Tick
         ImGui::TableSetColumnIndex(3);
         ImGui::Text("%u", receipt.tick);
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            ImGui::LogToClipboard();
+            ImGui::LogText("%u", receipt.tick);
+            ImGui::LogFinish();
+        }
 
         // Hash
         ImGui::TableSetColumnIndex(4);
         ImGui::Text("%s", receipt.hash.c_str());
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            ImGui::LogToClipboard();
+            ImGui::LogText("%s", receipt.hash.c_str());
+            ImGui::LogFinish();
+        }
 
         // Status
         ImGui::TableSetColumnIndex(5);
