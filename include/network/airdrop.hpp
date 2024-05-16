@@ -6,6 +6,7 @@
 #include <string>
 
 #include "network/connection.hpp"
+#include "wallet.hpp"
 
 // ------------------------------------------------------------------------------------------------
 struct AirdropError
@@ -36,6 +37,14 @@ struct StartAirdrop_output
 };
 
 // ------------------------------------------------------------------------------------------------
+struct StartAirdropResult
+{
+    StartAirdrop_output output;
+    std::string hash;
+    unsigned int tick;
+};
+
+// ------------------------------------------------------------------------------------------------
 struct DistributeToken_input
 {
     uint8_t issuer[32];
@@ -55,3 +64,23 @@ struct DistributeToken_output
  * @return The fees or an error
  */
 tl::expected<Fees_output, AirdropError> GetAirdropFees(const ConnectionPtr& connection);
+
+// ------------------------------------------------------------------------------------------------
+/**
+ * Start airdrop
+ * @param connection The node to start the airdrop
+ * @param issuer The wallet to issue the airdrop
+ * @param assetName The name of the asset to airdrop (max 7 characters)
+ * @param unitOfMeasurement The unit of measurement (digits only in string)
+ * @param numberOfUnits The amount of tokens that should be created
+ * @param numberOfDecimalPlaces The number of decimal places
+ * @param tickOffset The offset of the tick to issue at
+ */
+tl::expected<StartAirdropResult, AirdropError> StartAirdrop(
+    const ConnectionPtr& connection,
+    const Wallet& issuer,
+    std::string assetName,
+    std::string unitOfMeasurement,
+    int64_t numberOfUnits,
+    char numberOfDecimalPlaces,
+    unsigned int tickOffset);
