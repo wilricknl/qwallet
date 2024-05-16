@@ -54,6 +54,7 @@ add_library(
 	src/gui/qwallet.cpp
 	src/gui/wallet_window.cpp
 	src/gui/window.cpp
+	src/network/airdrop.cpp
 	src/network/connection.cpp
 	src/network/entity.cpp
 	src/network/tick.cpp
