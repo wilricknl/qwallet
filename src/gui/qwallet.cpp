@@ -6,6 +6,7 @@
 #include <imgui_internal.h>
 
 #include "fonts/raleway.hpp"
+#include "gui/airdrop_window.hpp"
 #include "gui/dpi.hpp"
 #include "gui/wallet_window.hpp"
 
@@ -18,8 +19,11 @@ QWallet::QWallet(std::string name)
 bool QWallet::Initialize(GLFWwindow* window, const std::string& glVersion)
 {
     // Create windows
-    auto blockchainWindow = std::make_shared<WalletWindow>("Wallet", true, false);
-    m_windows.emplace_back(blockchainWindow);
+    auto walletWindow = std::make_shared<WalletWindow>("Wallet", true, false);
+    m_windows.emplace_back(walletWindow);
+
+    auto airdropWindow = std::make_shared<AirdropWindow>("Airdrop", true, true);
+    m_windows.emplace_back(airdropWindow);
 
     // Make pointer to the node available within glfw
     glfwSetWindowUserPointer(window, this);
@@ -197,6 +201,7 @@ bool QWallet::Begin(ImGuiWindowFlags flags)
         ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Left, 0.0f, nullptr, &dockWalletWindow);
 
         ImGui::DockBuilderDockWindow("Wallet", dockWalletWindow);
+        ImGui::DockBuilderDockWindow("Airdrop", dockWalletWindow);
 
         ImGui::DockBuilderFinish(dockspaceId);
     }

@@ -49,6 +49,7 @@ add_library(
 	qwallet_library
 	src/utility.cpp
 	src/wallet.cpp
+	src/gui/airdrop_window.cpp
 	src/gui/dpi.cpp
 	src/gui/qwallet.cpp
 	src/gui/wallet_window.cpp
