@@ -113,9 +113,6 @@ tl::expected<StartAirdropResult, AirdropError> StartAirdrop(
 // ------------------------------------------------------------------------------------------------
 /**
  * Distribute token
- *
- * todo: test and verify this function
- *
  * @param connection The node to start the airdrop
  * @param issuer The wallet to issue the airdrop
  * @param assetName The name of the asset to airdrop (max 7 characters)
@@ -130,10 +127,22 @@ tl::expected<DistributeTokenResult, AirdropError> DistributeToken(
 
 // ------------------------------------------------------------------------------------------------
 /**
+ * Distribute token
+ * @param connection The node to start the airdrop
+ * @param issuer The wallet to issue the airdrop
+ * @param assetName The name of the asset to airdrop (max 7 characters)
+ * @param tick The tick to issue at
+ * @return The result of the distribution or an error
+ */
+tl::expected<DistributeTokenResult, AirdropError> DistributeTokenAtTick(
+    const ConnectionPtr& connection,
+    const Wallet& issuer,
+    const std::string& assetName,
+    unsigned int tick);
+
+// ------------------------------------------------------------------------------------------------
+/**
  * Transfer airdrop tokens
- *
- * todo: test and verify this function
- *
  * @param connection The node to start the airdrop
  * @param issuer The wallet to issue the airdrop
  * @param assetName The name of the asset to airdrop (max 7 characters)

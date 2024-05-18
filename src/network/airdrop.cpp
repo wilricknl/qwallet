@@ -319,6 +319,103 @@ tl::expected<DistributeTokenResult, AirdropError> DistributeToken(
 }
 
 // ------------------------------------------------------------------------------------------------
+tl::expected<DistributeTokenResult, AirdropError> DistributeTokenAtTick(
+    const ConnectionPtr& connection,
+    const Wallet& issuer,
+    const std::string& assetName,
+    unsigned int tick)
+{
+    // - - - - - - - - - - - - - - - - -
+    // Compute public keys from identity
+    uint8_t subseed[32] = {0};
+    if (!getSubseed((const unsigned char*)issuer.seed.data(), subseed))
+    {
+        return tl::make_unexpected(
+            AirdropError{"Failed to compute subseed from seed: " + issuer.seed});
+    }
+
+    unsigned char senderPublicKey[32];
+    if (!getPublicKeyFromIdentity((const unsigned char*)issuer.identity.data(), senderPublicKey))
+    {
+        return tl::make_unexpected(
+            AirdropError{"Failed to compute public key from identity: " + issuer.identity});
+    }
+
+    unsigned char recipientPublicKey[32]{0};
+    ((int*)recipientPublicKey)[0] = QAIRDROP_CONTRACT_ID;
+
+    // - - - - - - - - -
+    // Check asset name
+    if (!IsValidAssetNameLength(assetName))
+    {
+        return tl::make_unexpected(
+            AirdropError{"Asset name has an invalid length: " + std::to_string(assetName.size())});
+    }
+
+    // - - - - - - - - -
+    // Construct packet
+    struct
+    {
+        RequestResponseHeader header;
+        Transaction transaction;
+        DistributeToken_input input;
+        unsigned char signature[64];
+    } packet;
+
+    // init header
+    packet.header.setSize<sizeof(packet)>();
+    packet.header.setDejavu(0);
+    packet.header.setType(BROADCAST_TRANSACTION);
+
+    // init transaction
+    memcpy((void*)&packet.transaction.sourcePublicKey, senderPublicKey, 32);
+    memcpy((void*)&packet.transaction.destinationPublicKey, recipientPublicKey, 32);
+    packet.transaction.amount = 1000000;
+    packet.transaction.tick = tick;
+    packet.transaction.inputType = QAIRDROP_PROCEDURE_DistributeToken;
+    packet.transaction.inputSize = sizeof(DistributeToken_input);
+
+    // init distribute token input
+    memcpy((void*)&packet.input.issuer, senderPublicKey, 32);
+    memcpy(&packet.input.assetName, assetName.data(), assetName.size());
+
+    // compute digest
+    unsigned char digest[32] = {0};
+    KangarooTwelve(
+        (unsigned char*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(DistributeToken_input),
+        digest,
+        32);
+
+    // init signature
+    unsigned char signature[64] = {0};
+    sign(subseed, senderPublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+
+    // Recompute digest for transaction hash
+    KangarooTwelve(
+        (unsigned char*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(DistributeToken_input) + 64,
+        digest,
+        32);
+
+    // Compute transaction hash
+    char hash[61] = "";
+    getIdentity(digest, hash, true);
+
+    // - - - - - - - - - - -
+    // Broadcast transaction
+    if (!connection->Send((char*)&packet, packet.header.size()))
+    {
+        return tl::make_unexpected(
+            AirdropError{"Failed to send distribution request to the network"});
+    }
+
+    std::optional<DistributeToken_output> output = std::nullopt;
+    return DistributeTokenResult{output, hash, tick};
+}
+
+// ------------------------------------------------------------------------------------------------
 tl::expected<TransferTokenResult, AirdropError> TransferToken(
     const ConnectionPtr& connection,
     const Wallet& issuer,
