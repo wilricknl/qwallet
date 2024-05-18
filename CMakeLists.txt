@@ -61,7 +61,7 @@ add_library(
 	src/network/transactions.cpp)
 target_link_libraries(
 	qwallet_library
-	PRIVATE
+	PUBLIC
 	cryptopp::cryptopp
 	glad::glad
 	glfw
@@ -80,9 +80,19 @@ add_executable(
 target_link_libraries(
 	qwallet
 	PRIVATE
-	qwallet_library
-	glad::glad
-	glfw)
+	qwallet_library)
+
+# -----------------------------------------------------------------------------
+# TOOLS
+# -----------------------------------------------------------------------------
+
+add_executable(
+	qairdrop 
+	tools/qairdrop.cpp)
+target_link_libraries(
+	qairdrop
+	PRIVATE
+	qwallet_library)
 
 # -----------------------------------------------------------------------------
 # TEST

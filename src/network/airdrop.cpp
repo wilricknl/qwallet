@@ -226,7 +226,7 @@ tl::expected<DistributeTokenResult, AirdropError> DistributeToken(
 
     // - - - - - - - - -
     // Check asset name
-    if (IsValidAssetNameLength(assetName))
+    if (!IsValidAssetNameLength(assetName))
     {
         return tl::make_unexpected(
             AirdropError{"Asset name has an invalid length: " + std::to_string(assetName.size())});
@@ -355,7 +355,7 @@ tl::expected<TransferTokenResult, AirdropError> TransferToken(
 
     // - - - - - - - - -
     // Check asset name
-    if (IsValidAssetNameLength(assetName))
+    if (!IsValidAssetNameLength(assetName))
     {
         return tl::make_unexpected(
             AirdropError{"Asset name has an invalid length: " + std::to_string(assetName.size())});
