@@ -18,51 +18,51 @@ struct AirdropError
 // ------------------------------------------------------------------------------------------------
 struct Fees_output
 {
-    uint32_t airdropStartFee; // Amount of qus
-    uint32_t transferFee;     // Amount of qus
+    uint32_t airdropStartFee{}; // Amount of qus
+    uint32_t transferFee{};     // Amount of qus
 };
 
 // ------------------------------------------------------------------------------------------------
 struct StartAirdrop_input
 {
-    uint64_t assetName;
-    int64_t numberOfShares;
-    int8_t numberOfDecimalPlaces;
-    uint64_t unitOfMeasurement;
+    uint64_t assetName{};
+    int64_t numberOfShares{};
+    int8_t numberOfDecimalPlaces{};
+    uint64_t unitOfMeasurement{};
 };
 
 // ------------------------------------------------------------------------------------------------
 struct StartAirdrop_output
 {
-    int64_t issuedNumberOfShares;
+    int64_t issuedNumberOfShares{};
 };
 
 // ------------------------------------------------------------------------------------------------
 struct DistributeToken_input
 {
-    uint8_t issuer[32];
-    uint64_t assetName;
+    uint8_t issuer[32]{};
+    uint64_t assetName{};
 };
 
 // ------------------------------------------------------------------------------------------------
 struct DistributeToken_output
 {
-    int64_t transferredAmount;
+    int64_t transferredAmount{};
 };
 
 // ------------------------------------------------------------------------------------------------
 struct TransferToken_input
 {
-    uint8_t issuer[32];
-    uint64_t assetName;
-    uint64_t amount;
-    uint8_t receiver[32];
+    uint8_t issuer[32]{};
+    uint64_t assetName{};
+    uint64_t amount{};
+    uint8_t receiver[32]{};
 };
 
 // ------------------------------------------------------------------------------------------------
 struct TransferToken_output
 {
-    int64_t transferredAmount;
+    int64_t transferredAmount{};
 };
 
 // ------------------------------------------------------------------------------------------------

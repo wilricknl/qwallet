@@ -90,7 +90,7 @@ tl::expected<StartAirdropResult, AirdropError> StartAirdrop(
 
     // - - - - - - - - -
     // Check asset name
-    if (IsValidAssetNameLength(assetName))
+    if (!IsValidAssetNameLength(assetName))
     {
         return tl::make_unexpected(
             AirdropError{"Asset name has an invalid length: " + std::to_string(assetName.size())});
@@ -98,7 +98,7 @@ tl::expected<StartAirdropResult, AirdropError> StartAirdrop(
 
     // - - - - - - - - - - - - -
     // Check unit of measurement
-    if (unitOfMeasurement.empty() || unitOfMeasurement.size() > 7)
+    if (unitOfMeasurement.size() > 7)
     {
         return tl::make_unexpected(AirdropError{
             "Unit of measurement has an invalid length: " + std::to_string(assetName.size())});
